@@ -102,6 +102,22 @@ class SessionManager:
         conn.commit()
         conn.close()
 
+    def set_session_id(self, chat_id: int, session_id: str) -> None:
+        conn = sqlite3.connect(self.db_path)
+        cursor = conn.execute(
+            "SELECT working_dir FROM sessions WHERE chat_id = ?",
+            (chat_id,)
+        )
+        row = cursor.fetchone()
+        working_dir = row[0] if row else ""
+
+        conn.execute(
+            "INSERT OR REPLACE INTO sessions (chat_id, session_id, working_dir) VALUES (?, ?, ?)",
+            (chat_id, session_id, working_dir)
+        )
+        conn.commit()
+        conn.close()
+
     def get_or_create_session(self, chat_id: int) -> str:
         session = self.get_session(chat_id)
         if session.session_id:

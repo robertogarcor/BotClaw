@@ -180,6 +180,8 @@ class OpenCodeServer(BaseServer):
                 f"{self.url}/session",
                 timeout=30
             )
+            logger.info(f"list_sessions status: {response.status_code}")
+            logger.info(f"list_sessions response: {response.text[:500] if response.text else 'empty'}")
             if response.status_code == 200:
                 return response.json()
             return []

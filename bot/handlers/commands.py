@@ -32,7 +32,9 @@ async def help_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> No
         "/cd <path> - Change working directory\n"
         "/new - Start a new session\n"
         "/status - Show current project info\n"
-        "/sessions - List OpenCode sessions\n"
+        "/sessions - List TUI sessions\n"
+        "/use <id> - Select a session to use\n"
+        "/last - Use last session for project\n"
         "/mcp - Show MCP servers\n"
         "/cancel - Cancel current operation\n\n"
         "Just send me a message to start chatting with OpenCode!"
@@ -190,18 +192,27 @@ async def sessions_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -
         await update.message.reply_text("No sessions found.")
         return
 
-    response_text = "📋 *Sessions:*\n\n"
-    for session in sessions[:10]:
+    filtered_sessions = []
+    for session in sessions:
+        directory = session.get("directory", "")
+        if directory and directory not in ["", "/home/administrador", str(Path.home())]:
+            filtered_sessions.append(session)
+
+    if not filtered_sessions:
+        await update.message.reply_text("No TUI sessions found.\nUse /init to set your project first.")
+        return
+
+    response_text = "📋 TUI Sessions (for specific projects):\n\n"
+    for session in filtered_sessions[:10]:
         session_id = session.get("id", "")
         title = session.get("title", "Untitled")
         directory = session.get("directory", "")
-        response_text += f"• `{session_id[:20]}...`\n"
+        response_text += f"• {session_id[:20]}\n"
         response_text += f"  Title: {title}\n"
-        if directory:
-            response_text += f"  Dir: {directory}\n"
-        response_text += "\n"
+        response_text += f"  Dir: {directory}\n\n"
 
-    await update.message.reply_text(response_text[:4096], parse_mode="Markdown")
+    response_text += "\nUse /use <session_id> to select one"
+    await update.message.reply_text(response_text[:4096])
 
 
 async def mcp_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
@@ -224,3 +235,82 @@ async def mcp_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> Non
             response_text += f"   Status: {status.get('status')}\n"
 
     await update.message.reply_text(response_text[:4096], parse_mode="Markdown")
+
+
+async def use_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    from bot.services.session_manager import SessionManager
+
+    chat_id = update.effective_chat.id
+    args = context.args
+
+    if not args:
+        await update.message.reply_text(
+            "Usage: /use <session_id>\n"
+            "Use /sessions to see available sessions, then copy the session ID."
+        )
+        return
+
+    session_id = args[0].strip()
+
+    server = ServerFactory.create_opencode(
+        url=Settings.OPENCODE_SERVER_URL,
+        password=Settings.OPENCODE_SERVER_PASSWORD
+    )
+
+    session_details = server.get_session_details(session_id)
+    if not session_details:
+        await update.message.reply_text("❌ Session not found.")
+        return
+
+    session_manager = SessionManager()
+    session_manager.set_session_id(chat_id, session_id)
+
+    directory = session_details.get("directory", "")
+    if directory:
+        session_manager.set_working_dir(chat_id, directory)
+
+    title = session_details.get("title", "Unknown")
+    await update.message.reply_text(f"✅ Now using session:\nTitle: {title}\nID: {session_id[:25]}")
+
+
+async def last_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    from bot.services.session_manager import SessionManager
+    from bot.services.user_manager import UserManager
+
+    chat_id = update.effective_chat.id
+    user_manager = UserManager()
+    user = user_manager.get_user(chat_id)
+
+    if not user or not user.working_dir:
+        await update.message.reply_text("Use /init to set your project directory first.")
+        return
+
+    server = ServerFactory.create_opencode(
+        url=Settings.OPENCODE_SERVER_URL,
+        password=Settings.OPENCODE_SERVER_PASSWORD
+    )
+
+    sessions = server.list_sessions()
+
+    matching_sessions = []
+    for session in sessions:
+        directory = session.get("directory", "")
+        if directory == user.working_dir:
+            matching_sessions.append(session)
+
+    if not matching_sessions:
+        await update.message.reply_text(
+            f"No sessions found for {user.working_dir}\n"
+            "Use /init to set the correct project, then try /new to create a session."
+        )
+        return
+
+    latest_session = matching_sessions[0]
+    session_id = latest_session.get("id", "")
+    title = latest_session.get("title", "Untitled")
+
+    session_manager = SessionManager()
+    session_manager.set_session_id(chat_id, session_id)
+    session_manager.set_working_dir(chat_id, user.working_dir)
+
+    await update.message.reply_text(f"✅ Connected to latest session:\nTitle: {title}\nDir: {user.working_dir}")

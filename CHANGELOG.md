@@ -5,13 +5,14 @@ All notable changes to this project will be documented in this file.
 ## [0.4.0] - 2026-05-08
 
 ### Added
-- /sessions - List available OpenCode sessions
-- /mcp - Show connected MCP servers
-- list_sessions(), get_session_details(), list_mcp_servers() methods in OpenCodeServer
-- Test suite with pytest (20 tests passing)
-- pytest and pytest-mock added to requirements.txt
+- /sessions - List TUI sessions (filtered by project path)
+- /use <id> - Select existing session to use
+- /last - Auto-use last session for current project
+- set_session_id() method in SessionManager
+- Filter sessions by specific project directories
 
 ### Fixed
+- /sessions now filters TUI sessions (ignores generic /home/user paths)
 - OpenCode API v1.14.41 compatibility (endpoints changed from plural to singular)
   - /sessions → /session
   - /tui/submit-prompt → /session/:id/message
