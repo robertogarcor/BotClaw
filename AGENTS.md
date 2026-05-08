@@ -86,3 +86,37 @@ BotClaw/
 - Keep README.md updated with setup instructions
 - Document all new commands in help message
 - Update CHANGELOG.md for each release
+
+## Engram Persistent Memory
+
+This project uses Engram for persistent memory across sessions.
+
+### Saving Observations (REQUIRED after significant work)
+
+Call `mem_save` after:
+- Bug fix completed
+- Architecture or design decision made
+- Non-obvious discovery about the codebase
+- Configuration change or environment setup
+- Pattern established (naming, structure, convention)
+
+Format:
+- **title**: Short, searchable (e.g., "Fixed session timeout issue")
+- **type**: bugfix | decision | architecture | discovery | pattern | config
+- **content**: **What**, **Why**, **Where**, **Learned**
+
+### Checking Memory
+
+When working on something that might have been done before:
+1. Call `mem_context` - recent sessions
+2. Call `mem_search` with keywords - full-text search
+
+### Session End Protocol
+
+Before ending session, call `mem_session_summary` with:
+- Goal: What we were working on
+- Instructions: User preferences discovered
+- Discoveries: Technical findings
+- Accomplished: Completed items
+- Next Steps: What remains
+- Relevant Files: Key files changed
