@@ -13,6 +13,9 @@ All notable changes to this project will be documented in this file.
 
 ### Fixed
 - /sessions now filters TUI sessions (ignores generic /home/user paths)
+- /sessions filters by user's current project (/init path)
+- /use now works correctly with get_session_details
+- /last uses startswith matching for flexible path comparison
 - OpenCode API v1.14.41 compatibility (endpoints changed from plural to singular)
   - /sessions → /session
   - /tui/submit-prompt → /session/:id/message

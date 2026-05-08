@@ -180,6 +180,17 @@ async def cancel_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> 
 
 async def sessions_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     from bot.services.session_manager import SessionManager
+    from bot.services.user_manager import UserManager
+    import logging
+    logger = logging.getLogger(__name__)
+
+    chat_id = update.effective_chat.id
+
+    user_manager = UserManager()
+    user = user_manager.get_user(chat_id)
+    user_project = user.working_dir if user else ""
+
+    logger.info(f"User project: {user_project}")
 
     server = ServerFactory.create_opencode(
         url=Settings.OPENCODE_SERVER_URL,
@@ -187,6 +198,7 @@ async def sessions_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -
     )
 
     sessions = server.list_sessions()
+    logger.info(f"Total sessions: {len(sessions)}")
 
     if not sessions:
         await update.message.reply_text("No sessions found.")
@@ -194,20 +206,33 @@ async def sessions_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -
 
     filtered_sessions = []
     for session in sessions:
-        directory = session.get("directory", "")
-        if directory and directory not in ["", "/home/administrador", str(Path.home())]:
-            filtered_sessions.append(session)
+        directory = session.get("directory", "").rstrip("/")
+        if directory and directory not in ["", "/home/administrador", str(Path.home()).rstrip("/")]:
+            if user_project:
+                user_project_normalized = user_project.rstrip("/")
+                if directory.startswith(user_project_normalized) or user_project_normalized.startswith(directory):
+                    filtered_sessions.append(session)
+            else:
+                filtered_sessions.append(session)
 
     if not filtered_sessions:
-        await update.message.reply_text("No TUI sessions found.\nUse /init to set your project first.")
+        if user_project:
+            await update.message.reply_text(
+                f"No sessions found for project:\n{user_project}\n\n"
+                "Use /new to create a new session, or use /last to try the last session."
+            )
+        else:
+            await update.message.reply_text("No TUI sessions found.\nUse /init to set your project first.")
         return
 
-    response_text = "📋 TUI Sessions (for specific projects):\n\n"
+    response_text = "📋 Sessions:\n\n"
     for session in filtered_sessions[:10]:
         session_id = session.get("id", "")
         title = session.get("title", "Untitled")
         directory = session.get("directory", "")
-        response_text += f"• {session_id[:20]}\n"
+        is_current = directory.rstrip("/") == user_project.rstrip("/") if user_project else False
+        marker = "✅" if is_current else "•"
+        response_text += f"{marker} {session_id[:20]}\n"
         response_text += f"  Title: {title}\n"
         response_text += f"  Dir: {directory}\n\n"
 
@@ -239,6 +264,8 @@ async def mcp_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> Non
 
 async def use_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     from bot.services.session_manager import SessionManager
+    import logging
+    logger = logging.getLogger(__name__)
 
     chat_id = update.effective_chat.id
     args = context.args
@@ -251,6 +278,7 @@ async def use_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> Non
         return
 
     session_id = args[0].strip()
+    logger.info(f"use_command: trying session_id={session_id}")
 
     server = ServerFactory.create_opencode(
         url=Settings.OPENCODE_SERVER_URL,
@@ -258,6 +286,8 @@ async def use_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> Non
     )
 
     session_details = server.get_session_details(session_id)
+    logger.info(f"use_command: session_details={session_details}")
+
     if not session_details:
         await update.message.reply_text("❌ Session not found.")
         return
@@ -270,7 +300,7 @@ async def use_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> Non
         session_manager.set_working_dir(chat_id, directory)
 
     title = session_details.get("title", "Unknown")
-    await update.message.reply_text(f"✅ Now using session:\nTitle: {title}\nID: {session_id[:25]}")
+    await update.message.reply_text(f"✅ Now using session:\nTitle: {title}\nDir: {directory}")
 
 
 async def last_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
@@ -285,6 +315,8 @@ async def last_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> No
         await update.message.reply_text("Use /init to set your project directory first.")
         return
 
+    user_dir = user.working_dir.rstrip("/")
+
     server = ServerFactory.create_opencode(
         url=Settings.OPENCODE_SERVER_URL,
         password=Settings.OPENCODE_SERVER_PASSWORD
@@ -294,14 +326,14 @@ async def last_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> No
 
     matching_sessions = []
     for session in sessions:
-        directory = session.get("directory", "")
-        if directory == user.working_dir:
+        directory = session.get("directory", "").rstrip("/")
+        if directory.startswith(user_dir) or user_dir.startswith(directory):
             matching_sessions.append(session)
 
     if not matching_sessions:
         await update.message.reply_text(
-            f"No sessions found for {user.working_dir}\n"
-            "Use /init to set the correct project, then try /new to create a session."
+            f"No sessions found for:\n{user.working_dir}\n\n"
+            "Use /new to create a new session."
         )
         return
 
