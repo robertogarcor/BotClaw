@@ -32,6 +32,8 @@ async def help_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> No
         "/cd <path> - Change working directory\n"
         "/new - Start a new session\n"
         "/status - Show current project info\n"
+        "/sessions - List OpenCode sessions\n"
+        "/mcp - Show MCP servers\n"
         "/cancel - Cancel current operation\n\n"
         "Just send me a message to start chatting with OpenCode!"
     )
