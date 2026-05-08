@@ -1,5 +1,14 @@
 # BotClaw - Agent Instructions
 
+## ⚠️ START HERE: Memory Check
+
+**Before starting ANY work on this project, you MUST:**
+
+1. Call `mem_context` - Get recent session context
+2. Call `mem_search` with keywords related to your task - Check for prior work
+
+This ensures you know what has been done and avoid duplicating work.
+
 ## Project Overview
 
 BotClaw is a Telegram client that interfaces with OpenCode CLI, allowing users to interact with OpenCode from Telegram as if they were using it locally.
@@ -27,12 +36,17 @@ BotClaw/
 ├── bot/
 │   ├── __init__.py
 │   ├── main.py
+│   ├── config/
+│   │   └── settings.py
 │   ├── handlers/
 │   │   ├── commands.py
 │   │   ├── messages.py
 │   │   └── callbacks.py
+│   ├── servers/
+│   │   ├── base.py          # Abstract BaseServer
+│   │   ├── factory.py       # ServerFactory
+│   │   └── opencode.py      # OpenCode implementation
 │   ├── services/
-│   │   ├── opencode_client.py
 │   │   ├── session_manager.py
 │   │   └── user_manager.py
 │   └── models/
@@ -40,13 +54,17 @@ BotClaw/
 │       └── session.py
 ├── config/
 │   ├── settings.py
-│   └── .env.example
+│   ├── .env.example
+│   └── .env
 ├── data/
+│   └── bot.db
 ├── tests/
+│   └── (pytest tests)
 ├── requirements.txt
 ├── README.md
 ├── CHANGELOG.md
-└── SPEC.md
+├── SPEC.md
+└── AGENTS.md
 ```
 
 ### Key Principles
@@ -64,16 +82,23 @@ BotClaw/
 | `/help` | Show help message |
 | `/init <path>` | Set user's working directory |
 | `/clone <url>` | Clone git repo and set as project |
-| `/cd <path>` | Change working directory |
+| `/cd <path>` | Change working directory (alias of /init) |
 | `/new` | Start new OpenCode session |
 | `/status` | Show current project and session info |
+| `/sessions` | List available OpenCode sessions |
+| `/mcp` | Show connected MCP servers |
 
 ### OpenCode Integration
 
 - Use `opencode serve` as the backend HTTP server
-- Each user gets their own session via `/sessions` API
-- Handle control requests (questions from agent) via `/tui/control/next`
+- **API v1.14.41 endpoints:**
+  - `POST /session` - Create new session
+  - `POST /session/:id/message` - Send message (body: `{"parts": [{"type": "text", "text": "prompt"}]}`)
+  - `GET /session` - List sessions
+  - `GET /mcp` - List MCP servers
+- Each user gets their own session via `/session` API
 - Map chat_id to session_id for session persistence
+- Two types of sessions: BotClaw SQLite (chat_id → session_id) vs OpenCode internal
 
 ### Testing
 
@@ -91,6 +116,14 @@ BotClaw/
 
 This project uses Engram for persistent memory across sessions.
 
+### ⚠️ ALWAYS CHECK MEMORY AT START
+
+Before starting any work, you MUST:
+1. Call `mem_context` - Get recent session context
+2. Call `mem_search` with keywords related to your task - Check for prior work
+
+This ensures you know what has been done and avoid duplicating work.
+
 ### Saving Observations (REQUIRED after significant work)
 
 Call `mem_save` after:
@@ -105,11 +138,14 @@ Format:
 - **type**: bugfix | decision | architecture | discovery | pattern | config
 - **content**: **What**, **Why**, **Where**, **Learned**
 
-### Checking Memory
+### Checking Memory Proactively
 
-When working on something that might have been done before:
-1. Call `mem_context` - recent sessions
-2. Call `mem_search` with keywords - full-text search
+When:
+- Starting work on something that might have been done before
+- User mentions a topic you have no context on
+- First message references the project, a feature, or a problem
+
+Call `mem_search` with keywords to check for prior work.
 
 ### Session End Protocol
 
