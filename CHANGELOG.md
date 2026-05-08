@@ -8,6 +8,8 @@ All notable changes to this project will be documented in this file.
 - /sessions - List available OpenCode sessions
 - /mcp - Show connected MCP servers
 - list_sessions(), get_session_details(), list_mcp_servers() methods in OpenCodeServer
+- Test suite with pytest (20 tests passing)
+- pytest and pytest-mock added to requirements.txt
 
 ### Fixed
 - OpenCode API v1.14.41 compatibility (endpoints changed from plural to singular)
