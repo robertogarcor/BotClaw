@@ -4,6 +4,11 @@ All notable changes to this project will be documented in this file.
 
 ## [0.4.0] - 2026-05-08
 
+### Added
+- /sessions - List available OpenCode sessions
+- /mcp - Show connected MCP servers
+- list_sessions(), get_session_details(), list_mcp_servers() methods in OpenCodeServer
+
 ### Fixed
 - OpenCode API v1.14.41 compatibility (endpoints changed from plural to singular)
   - /sessions → /session

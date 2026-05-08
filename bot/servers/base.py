@@ -44,3 +44,15 @@ class BaseServer(ABC):
     @abstractmethod
     def send_control_response(self, session_id: str, response: str) -> ServerResponse:
         pass
+
+    @abstractmethod
+    def list_sessions(self) -> list:
+        pass
+
+    @abstractmethod
+    def get_session_details(self, session_id: str) -> dict:
+        pass
+
+    @abstractmethod
+    def list_mcp_servers(self) -> dict:
+        pass

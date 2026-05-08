@@ -32,6 +32,8 @@ def main():
     application.add_handler(CommandHandler("clone", commands.clone_command))
     application.add_handler(CommandHandler("new", commands.new_command))
     application.add_handler(CommandHandler("cancel", commands.cancel_command))
+    application.add_handler(CommandHandler("sessions", commands.sessions_command))
+    application.add_handler(CommandHandler("mcp", commands.mcp_command))
 
     application.add_handler(CallbackQueryHandler(callbacks.handle_callback))
 

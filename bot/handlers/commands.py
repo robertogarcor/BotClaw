@@ -172,3 +172,53 @@ async def new_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> Non
 
 async def cancel_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     await update.message.reply_text("Operation cancelled.")
+
+
+async def sessions_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    from bot.services.session_manager import SessionManager
+
+    server = ServerFactory.create_opencode(
+        url=Settings.OPENCODE_SERVER_URL,
+        password=Settings.OPENCODE_SERVER_PASSWORD
+    )
+
+    sessions = server.list_sessions()
+
+    if not sessions:
+        await update.message.reply_text("No sessions found.")
+        return
+
+    response_text = "📋 *Sessions:*\n\n"
+    for session in sessions[:10]:
+        session_id = session.get("id", "")
+        title = session.get("title", "Untitled")
+        directory = session.get("directory", "")
+        response_text += f"• `{session_id[:20]}...`\n"
+        response_text += f"  Title: {title}\n"
+        if directory:
+            response_text += f"  Dir: {directory}\n"
+        response_text += "\n"
+
+    await update.message.reply_text(response_text[:4096], parse_mode="Markdown")
+
+
+async def mcp_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    server = ServerFactory.create_opencode(
+        url=Settings.OPENCODE_SERVER_URL,
+        password=Settings.OPENCODE_SERVER_PASSWORD
+    )
+
+    mcp_servers = server.list_mcp_servers()
+
+    if not mcp_servers:
+        await update.message.reply_text("🔌 *MCP Servers:*\n\nNo MCP servers connected.")
+        return
+
+    response_text = "🔌 *MCP Servers:*\n\n"
+    for name, status in mcp_servers.items():
+        status_emoji = "✅" if status.get("connected") else "❌"
+        response_text += f"{status_emoji} *{name}*\n"
+        if status.get("status"):
+            response_text += f"   Status: {status.get('status')}\n"
+
+    await update.message.reply_text(response_text[:4096], parse_mode="Markdown")

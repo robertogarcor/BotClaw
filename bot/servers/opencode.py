@@ -173,3 +173,42 @@ class OpenCodeServer(BaseServer):
                 )
 
         return ServerResponse(content="Timeout: No response received")
+
+    def list_sessions(self) -> list:
+        try:
+            response = self._session.get(
+                f"{self.url}/session",
+                timeout=30
+            )
+            if response.status_code == 200:
+                return response.json()
+            return []
+        except requests.RequestException as e:
+            logger.error(f"Error listing sessions: {e}")
+            return []
+
+    def get_session_details(self, session_id: str) -> dict:
+        try:
+            response = self._session.get(
+                f"{self.url}/session/{session_id}",
+                timeout=30
+            )
+            if response.status_code == 200:
+                return response.json()
+            return {}
+        except requests.RequestException as e:
+            logger.error(f"Error getting session details: {e}")
+            return {}
+
+    def list_mcp_servers(self) -> dict:
+        try:
+            response = self._session.get(
+                f"{self.url}/mcp",
+                timeout=30
+            )
+            if response.status_code == 200:
+                return response.json()
+            return {}
+        except requests.RequestException as e:
+            logger.error(f"Error listing MCP servers: {e}")
+            return {}
