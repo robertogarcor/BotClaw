@@ -36,8 +36,13 @@ def main():
     application.add_handler(CommandHandler("mcp", commands.mcp_command))
     application.add_handler(CommandHandler("use", commands.use_command))
     application.add_handler(CommandHandler("last", commands.last_command))
+    application.add_handler(CommandHandler("voice", commands.voice_command))
 
     application.add_handler(CallbackQueryHandler(callbacks.handle_callback))
+
+    from bot.handlers import voice
+    application.add_handler(MessageHandler(filters.VOICE, voice.handle_voice))
+    application.add_handler(MessageHandler(filters.AUDIO, voice.handle_audio))
 
     application.add_handler(MessageHandler(
         filters.TEXT & ~filters.COMMAND,

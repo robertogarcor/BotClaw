@@ -11,13 +11,13 @@ from bot.servers.factory import ServerFactory
 logger = logging.getLogger(__name__)
 
 
-async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE, text: str = None) -> None:
     user = update.effective_user
     if (Settings.USERS_ALLOWED or Settings.USER_IDS_ALLOWED) and not Settings.is_user_allowed(user.username, user.id):
         return
 
     chat_id = update.effective_chat.id
-    message_text = update.message.text
+    message_text = text if text is not None else update.message.text
 
     if not message_text:
         return

@@ -36,8 +36,13 @@ async def help_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> No
         "/use <id> - Select a session to use\n"
         "/last - Use last session for project\n"
         "/mcp - Show MCP servers\n"
+        "/voice - Toggle voice mode\n"
+        "/voice on - Reply in voice when you send voice\n"
+        "/voice tts - Always reply in voice\n"
+        "/voice off - Text replies only\n"
+        "/voice status - Show voice mode\n"
         "/cancel - Cancel current operation\n\n"
-        "Just send me a message to start chatting with OpenCode!"
+        "Just send me a message or voice to start chatting with OpenCode!"
     )
     await update.message.reply_text(help_text, parse_mode="Markdown")
 
@@ -204,13 +209,14 @@ async def sessions_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -
         await update.message.reply_text("No sessions found.")
         return
 
+    user_dir = user_project.rstrip("/") if user_project else ""
+
     filtered_sessions = []
     for session in sessions:
         directory = session.get("directory", "").rstrip("/")
         if directory and directory not in ["", "/home/administrador", str(Path.home()).rstrip("/")]:
-            if user_project:
-                user_project_normalized = user_project.rstrip("/")
-                if directory.startswith(user_project_normalized) or user_project_normalized.startswith(directory):
+            if user_dir:
+                if directory.startswith(user_dir) or user_dir.startswith(directory):
                     filtered_sessions.append(session)
             else:
                 filtered_sessions.append(session)
@@ -218,8 +224,8 @@ async def sessions_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -
     if not filtered_sessions:
         if user_project:
             await update.message.reply_text(
-                f"No sessions found for project:\n{user_project}\n\n"
-                "Use /new to create a new session, or use /last to try the last session."
+                f"No sessions found for:\n{user_project}\n\n"
+                "Use /new to create a new session, or use /last."
             )
         else:
             await update.message.reply_text("No TUI sessions found.\nUse /init to set your project first.")
@@ -236,7 +242,7 @@ async def sessions_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -
         response_text += f"  Title: {title}\n"
         response_text += f"  Dir: {directory}\n\n"
 
-    response_text += "\nUse /use <session_id> to select one"
+    response_text += "\nUse /use <session_id> to select one, or /last to use the latest."
     await update.message.reply_text(response_text[:4096])
 
 
@@ -325,19 +331,28 @@ async def last_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> No
     sessions = server.list_sessions()
 
     matching_sessions = []
+    tui_sessions = []
     for session in sessions:
         directory = session.get("directory", "").rstrip("/")
+        title = session.get("title", "")
         if directory.startswith(user_dir) or user_dir.startswith(directory):
-            matching_sessions.append(session)
+            if title and not title.startswith("BotClaw session for"):
+                tui_sessions.append(session)
+            else:
+                matching_sessions.append(session)
 
-    if not matching_sessions:
+    if not tui_sessions and not matching_sessions:
         await update.message.reply_text(
             f"No sessions found for:\n{user.working_dir}\n\n"
             "Use /new to create a new session."
         )
         return
 
-    latest_session = matching_sessions[0]
+    if tui_sessions:
+        latest_session = tui_sessions[0]
+    else:
+        latest_session = matching_sessions[0]
+
     session_id = latest_session.get("id", "")
     title = latest_session.get("title", "Untitled")
 
@@ -346,3 +361,52 @@ async def last_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> No
     session_manager.set_working_dir(chat_id, user.working_dir)
 
     await update.message.reply_text(f"✅ Connected to latest session:\nTitle: {title}\nDir: {user.working_dir}")
+
+
+async def voice_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    chat_id = update.effective_chat.id
+    args = context.args
+
+    current_mode = context.user_data.get("voice_mode", "off")
+
+    if not args:
+        if current_mode == "off":
+            new_mode = "voice"
+            context.user_data["voice_mode"] = new_mode
+            await update.message.reply_text("🎤 Voice mode: ON\nReplies will be sent as voice when you send voice messages.")
+        else:
+            context.user_data["voice_mode"] = "off"
+            await update.message.reply_text("🔇 Voice mode: OFF\nReplies will be sent as text.")
+        return
+
+    subcommand = args[0].lower()
+
+    if subcommand == "on":
+        context.user_data["voice_mode"] = "voice"
+        await update.message.reply_text("🎤 Voice mode: ON\nWill respond in voice when you send voice messages.")
+
+    elif subcommand == "tts":
+        context.user_data["voice_mode"] = "tts"
+        await update.message.reply_text("🎤 Voice mode: TTS\nWill ALWAYS respond in voice for all messages.")
+
+    elif subcommand == "off":
+        context.user_data["voice_mode"] = "off"
+        await update.message.reply_text("🔇 Voice mode: OFF\nReplies will be sent as text.")
+
+    elif subcommand == "status":
+        mode = context.user_data.get("voice_mode", "off")
+        status_text = f"🎤 Voice Mode: *{mode}*\n\n"
+        status_text += "• `off` - Text replies only\n"
+        status_text += "• `voice` - Voice replies when you send voice\n"
+        status_text += "• `tts` - Voice replies for ALL messages\n"
+        await update.message.reply_text(status_text, parse_mode="Markdown")
+
+    else:
+        await update.message.reply_text(
+            "Usage: /voice [on|off|tts|status]\n"
+            "  /voice - Toggle (on/off)\n"
+            "  /voice on - Respond in voice when you send voice\n"
+            "  /voice tts - Always respond in voice\n"
+            "  /voice off - Text replies only\n"
+            "  /voice status - Show current mode"
+        )

@@ -2,6 +2,21 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.5.0] - 2026-05-08
+
+### Added
+- Voice support: receive and send voice messages
+- Speech-to-Text (STT): faster-whisper for local transcription
+- Text-to-Speech (TTS): edge-tts for voice responses
+- Voice mode commands: /voice, /voice on, /voice tts, /voice off, /voice status
+- bot/services/stt.py - Speech-to-Text service
+- bot/services/tts.py - Text-to-Speech service
+- bot/services/audio_utils.py - Audio download and conversion
+- bot/handlers/voice.py - Voice message handler
+
+### Changed
+- Updated help with voice commands
+
 ## [0.4.0] - 2026-05-08
 
 ### Added

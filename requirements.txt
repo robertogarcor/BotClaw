@@ -4,3 +4,9 @@ python-dotenv>=1.0.0
 sqlalchemy>=2.0.0
 pytest>=7.0.0
 pytest-mock>=3.10.0
+
+# Voice features
+faster-whisper>=0.10.0
+edge-tts>=6.1.0
+pydub>=0.25.1
+aiofiles>=23.0.0
