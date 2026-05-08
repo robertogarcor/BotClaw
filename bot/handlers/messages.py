@@ -1,4 +1,6 @@
+import os
 import logging
+import tempfile
 
 from telegram import Update
 from telegram.ext import ContextTypes
@@ -56,11 +58,13 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE, tex
             return
 
         if response.content:
-            await update.message.reply_text(response.content[:4096])
+            voice_mode = context.user_data.get("voice_mode", "off")
+            await send_response_with_voice(update, context, response.content, voice_mode)
         else:
             await update.message.reply_text("✅ Done (no output)")
 
     except Exception as e:
+        logger.error(f"Error sending prompt: {e}")
         await update.message.reply_text(f"❌ Error: {str(e)}")
 
 
@@ -93,9 +97,32 @@ async def handle_control_response(update: Update, context: ContextTypes.DEFAULT_
             return
 
         if response.content:
-            await update.message.reply_text(response.content[:4096])
+            voice_mode = context.user_data.get("voice_mode", "off")
+            await send_response_with_voice(update, context, response.content, voice_mode)
         else:
             await update.message.reply_text("✅ Done (no output)")
 
     except Exception as e:
+        logger.error(f"Error in control response: {e}")
         await update.message.reply_text(f"❌ Error: {str(e)}")
+
+
+async def send_response_with_voice(update: Update, context: ContextTypes.DEFAULT_TYPE, text: str, voice_mode: str) -> None:
+    if voice_mode in ["voice", "tts"]:
+        try:
+            from bot.services.tts import synthesize_to_opus
+            from bot.services.audio_utils import cleanup_temp_files
+
+            temp_dir = tempfile.gettempdir()
+            audio_path = await synthesize_to_opus(text, temp_dir)
+
+            if audio_path and os.path.exists(audio_path):
+                await update.message.reply_voice(audio_path)
+                cleanup_temp_files(audio_path)
+                logger.info(f"Sent voice response")
+                return
+
+        except Exception as e:
+            logger.error(f"TTS failed: {e}, falling back to text")
+
+    await update.message.reply_text(text[:4096])
