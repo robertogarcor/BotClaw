@@ -24,25 +24,35 @@ async def start_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> N
 
 async def help_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     help_text = (
-        "📖 *Available Commands*\n\n"
+        "📖 *BotClaw Commands*\n\n"
+        
+        "🚀 *Getting Started*\n"
         "/start - Start the bot\n"
         "/help - Show this help\n"
-        "/init <path> - Set your working directory\n"
-        "/clone <url> - Clone a git repository\n"
-        "/cd <path> - Change working directory\n"
-        "/new - Start a new session\n"
-        "/status - Show current project info\n"
+        "/status - Show current project info\n\n"
+        
+        "📁 *Project*\n"
+        "/init <path> - Set working directory\n"
+        "/clone <url> - Clone git repository\n\n"
+        
+        "💬 *Sessions*\n"
+        "/new - Start new session\n"
         "/sessions - List TUI sessions\n"
-        "/use <id> - Select a session to use\n"
-        "/last - Use last session for project\n"
-        "/mcp - Show MCP servers\n"
+        "/use <id> - Select a session\n"
+        "/last - Use last session\n\n"
+        
+        "🎤 *Voice*\n"
         "/voice - Toggle voice mode\n"
         "/voice on - Reply in voice when you send voice\n"
         "/voice tts - Always reply in voice\n"
         "/voice off - Text replies only\n"
-        "/voice status - Show voice mode\n"
+        "/voice status - Show voice mode\n\n"
+        
+        "🔧 *Utilities*\n"
+        "/mcp - Show MCP servers\n"
         "/cancel - Cancel current operation\n\n"
-        "Just send me a message or voice to start chatting with OpenCode!"
+        
+        "_Just send me a message or voice to chat with OpenCode!_"
     )
     await update.message.reply_text(help_text, parse_mode="Markdown")
 
@@ -103,13 +113,57 @@ async def init_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> No
     user_manager.set_working_dir(chat_id, full_path)
 
     session_manager = SessionManager()
-    session_manager.set_working_dir(chat_id, full_path)
+    session_id = session_manager.set_working_dir(chat_id, full_path)
 
-    await update.message.reply_text(f"✅ Working directory set to:\n`{full_path}`", parse_mode="Markdown")
+    agents_path = Path(full_path) / "AGENTS.md"
+    spec_path = Path(full_path) / "SPEC.md"
 
+    context_loaded = []
+    context_text = ""
 
-async def cd_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
-    await init_command(update, context)
+    if agents_path.exists():
+        try:
+            agents_content = agents_path.read_text()
+            context_text += f"--- AGENTS.md ---\n{agents_content}\n"
+            context_loaded.append("AGENTS.md")
+        except Exception:
+            pass
+
+    if spec_path.exists():
+        try:
+            spec_content = spec_path.read_text()
+            context_text += f"\n--- SPEC.md ---\n{spec_content}\n"
+            context_loaded.append("SPEC.md")
+        except Exception:
+            pass
+
+    if session_id and context_text:
+        await update.message.reply_text("⏳ Loading project context...")
+        try:
+            server = session_manager.get_server()
+            project_name = Path(full_path).name
+            prompt = (
+                f"Eres el agente de este proyecto: {project_name}\n\n"
+                f"Contexto del proyecto:\n{context_text}\n\n"
+                f"Directorio de trabajo: {full_path}\n"
+                f"Este es tu proyecto activo. Usa este contexto para responder preguntas."
+            )
+            server.send_prompt(session_id, prompt)
+        except Exception as e:
+            import logging
+            logging.getLogger(__name__).error(f"Failed to load context: {e}")
+
+    if context_loaded:
+        await update.message.reply_text(
+            f"✅ Working directory set to:\n`{full_path}`\n\n"
+            f"📄 Context loaded: {', '.join(context_loaded)}",
+            parse_mode="Markdown"
+        )
+    else:
+        await update.message.reply_text(
+            f"✅ Working directory set to:\n`{full_path}`",
+            parse_mode="Markdown"
+        )
 
 
 async def clone_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
@@ -134,7 +188,7 @@ async def clone_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> N
     target_dir = Path(base_dir) / repo_name
 
     if target_dir.exists():
-        await update.message.reply_text(f"📁 Directory already exists: {target_dir}\nUse /cd {target_dir} to use it.")
+        await update.message.reply_text(f"📁 Directory already exists: {target_dir}\nUse /init {target_dir} to use it.")
         return
 
     await update.message.reply_text(f"🔄 Cloning {repo_url}...")

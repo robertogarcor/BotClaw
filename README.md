@@ -60,7 +60,6 @@ BotClaw allows users to interact with OpenCode from Telegram as if they were usi
 | `/help` | Show help |
 | `/init <path>` | Set your working directory |
 | `/clone <url>` | Clone a git repository |
-| `/cd <path>` | Change working directory |
 | `/new` | Start a new OpenCode session |
 | `/status` | Show current project info |
 | `/sessions` | List available OpenCode sessions |

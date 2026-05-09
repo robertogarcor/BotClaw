@@ -28,7 +28,6 @@ def main():
     application.add_handler(CommandHandler("help", commands.help_command))
     application.add_handler(CommandHandler("status", commands.status_command))
     application.add_handler(CommandHandler("init", commands.init_command))
-    application.add_handler(CommandHandler("cd", commands.cd_command))
     application.add_handler(CommandHandler("clone", commands.clone_command))
     application.add_handler(CommandHandler("new", commands.new_command))
     application.add_handler(CommandHandler("cancel", commands.cancel_command))

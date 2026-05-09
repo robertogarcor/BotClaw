@@ -7,6 +7,7 @@ class User:
     chat_id: int
     username: str
     working_dir: str = ""
+    voice_mode: str = "off"
     created_at: datetime = None
 
     def __post_init__(self):

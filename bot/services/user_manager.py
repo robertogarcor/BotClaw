@@ -18,6 +18,7 @@ class UserManager:
                 chat_id INTEGER PRIMARY KEY,
                 username TEXT,
                 working_dir TEXT,
+                voice_mode TEXT DEFAULT 'off',
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
             )
         """)

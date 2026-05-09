@@ -104,7 +104,7 @@ All notable changes to this project will be documented in this file.
 - config/ for settings and environment variables
 
 ### Commands Planned
-- /start, /help, /init, /clone, /cd, /new, /status
+- /start, /help, /init, /clone, /new, /status
 
 ## [0.0.0] - 2026-05-03
 

@@ -59,6 +59,7 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE, tex
 
         if response.content:
             voice_mode = context.user_data.get("voice_mode", "off")
+            logger.info(f"Message handler - voice_mode: {voice_mode}")
             await send_response_with_voice(update, context, response.content, voice_mode)
         else:
             await update.message.reply_text("✅ Done (no output)")
@@ -108,13 +109,16 @@ async def handle_control_response(update: Update, context: ContextTypes.DEFAULT_
 
 
 async def send_response_with_voice(update: Update, context: ContextTypes.DEFAULT_TYPE, text: str, voice_mode: str) -> None:
+    logger.info(f"send_response_with_voice called with voice_mode: {voice_mode}")
     if voice_mode in ["voice", "tts"]:
         try:
             from bot.services.tts import synthesize_to_opus
             from bot.services.audio_utils import cleanup_temp_files
 
+            logger.info("Generating TTS audio...")
             temp_dir = tempfile.gettempdir()
             audio_path = await synthesize_to_opus(text, temp_dir)
+            logger.info(f"TTS result: {audio_path}")
 
             if audio_path and os.path.exists(audio_path):
                 await update.message.reply_voice(audio_path)
@@ -125,4 +129,5 @@ async def send_response_with_voice(update: Update, context: ContextTypes.DEFAULT
         except Exception as e:
             logger.error(f"TTS failed: {e}, falling back to text")
 
+    logger.info("Sending text response (fallback)")
     await update.message.reply_text(text[:4096])

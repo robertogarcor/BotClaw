@@ -102,7 +102,6 @@ LOG_LEVEL=INFO
 | /help | - | Show help message |
 | /init | `<path>` | Set working directory |
 | /clone | `<url>` | Clone git repo |
-| /cd | `<path>` | Change directory |
 | /new | - | New session |
 | /status | - | Show current project |
 
