@@ -29,10 +29,12 @@ async def help_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> No
         "🚀 *Getting Started*\n"
         "/start - Start the bot\n"
         "/help - Show this help\n"
-        "/status - Show current project info\n\n"
+        "/status - Show current status\n"
+        "/project - Show current project\n\n"
         
         "📁 *Project*\n"
         "/init <path> - Set working directory\n"
+        "/project - Show current project info\n"
         "/clone <url> - Clone git repository\n\n"
         
         "💬 *Sessions*\n"
@@ -118,7 +120,7 @@ async def project_command(update: Update, context: ContextTypes.DEFAULT_TYPE) ->
         f"📁 *Project:*\n\n"
         f"Name: `{project_name}`\n"
         f"Path: `{user.working_dir}`\n"
-        f"Session: `{current_session_id[:20]}...`",
+        f"Session: `{current_session_id}`",
         parse_mode="Markdown"
     )
 
