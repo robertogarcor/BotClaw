@@ -18,35 +18,41 @@ Telegram bot that interfaces with OpenCode CLI. Each Telegram user has their own
 
 ## Key Architecture
 
-- `bot/handlers/` - commands.py, messages.py, voice.py
+- `bot/handlers/` - commands.py, messages.py, voice.py, callbacks.py
 - `bot/services/` - session_manager.py, user_manager.py, tts.py, stt.py
 - `bot/servers/` - opencode.py (API v1.14.41)
-
-## Voice Feature
-
-- STT: faster-whisper (local, no API key)
-- TTS: edge-tts + ffmpeg (convert to Opus for Telegram)
-- Voice mode stored in SQLite (`voice_mode` column), NOT in memory
-
-**TTS bug fix**: Always use `text.strip()` before edge-tts, voice `es-MX-DaliaNeural` (not es-ES-ElenaNeural)
 
 ## Commands
 
 | Command | Description |
 |---------|-------------|
-| `/init <path>` | Set working directory (auto-loads AGENTS.md + SPEC.md into session) |
+| `/init <path>` | Set working directory |
+| `/project` | Show current project |
 | `/clone <url>` | Clone git repo |
 | `/new` | Start new session |
-| `/sessions` | List TUI sessions |
+| `/sessions` | List sessions for current project |
+| `/use <id>` | Select session by ID |
+| `/last` | Use last session |
+| `/skills` | Show project skills |
 | `/voice [on/off/status]` | Toggle voice responses |
-| `/start`, `/help`, `/status`, `/mcp` | Standard commands |
+| `/status` | Show status with project, git, voice mode |
+| `/start`, `/help`, `/mcp` | Standard commands |
 
+## Project Context in Messages
 
+When user sends a message, the bot prefixes it with `[Proyecto: <name>]` so the agent knows the active project.
+
+## Voice Feature
+
+- STT: faster-whisper (local, no API key)
+- TTS: edge-tts + ffmpeg (convert to Opus for Telegram)
+- Voice mode stored in SQLite (`voice_mode` column)
+
+**TTS**: Use `text.strip()` + voice `es-MX-DaliaNeural`
 
 ## Common Issues
 
-- "Connection refused" on port 4096 → server runs on 4097, check config/.env
-- Voice mode not persisting → voice_mode saved in SQLite, not memory (fixed)
+- "Connection refused" on port 4096 → server runs on 4097
 - TTS returns empty file → use `text.strip()` + es-MX-DaliaNeural voice
 
 ## Engram Memory Protocol

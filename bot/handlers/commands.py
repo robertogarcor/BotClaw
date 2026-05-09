@@ -96,6 +96,33 @@ async def status_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> 
     await update.message.reply_text(status_text, parse_mode="Markdown")
 
 
+async def project_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    from bot.services.user_manager import UserManager
+    from bot.services.session_manager import SessionManager
+
+    chat_id = update.effective_chat.id
+    user_manager = UserManager()
+    user = user_manager.get_user(chat_id)
+
+    if not user or not user.working_dir:
+        await update.message.reply_text("📁 *Project:*\n\nNo project set.\nUse `/init <path>` to set your project.")
+        return
+
+    project_name = Path(user.working_dir).name
+
+    session_manager = SessionManager()
+    session = session_manager.get_session(chat_id)
+    current_session_id = session.session_id if session.session_id else "None"
+
+    await update.message.reply_text(
+        f"📁 *Project:*\n\n"
+        f"Name: `{project_name}`\n"
+        f"Path: `{user.working_dir}`\n"
+        f"Session: `{current_session_id[:20]}...`",
+        parse_mode="Markdown"
+    )
+
+
 async def init_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     from bot.services.user_manager import UserManager
     from bot.services.session_manager import SessionManager

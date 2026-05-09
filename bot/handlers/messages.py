@@ -1,6 +1,7 @@
 import os
 import logging
 import tempfile
+from pathlib import Path
 
 from telegram import Update
 from telegram.ext import ContextTypes
@@ -38,6 +39,15 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE, tex
 
     session_manager = SessionManager()
 
+    project_prefix = ""
+    if user_obj and user_obj.working_dir:
+        project_name = Path(user_obj.working_dir).name
+        project_path = user_obj.working_dir
+        project_prefix = f"[INFO] Proyecto activo: {project_name} | Directorio: {project_path}. "
+        logger.info(f"Sending prompt with project: {project_name}")
+
+    full_prompt = project_prefix + message_text
+
     session_id = session_manager.get_or_create_session(chat_id)
 
     if not session_id:
@@ -47,7 +57,7 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE, tex
     logger.info(f"Using session: {session_id}")
 
     try:
-        response = session_manager.get_server().send_prompt(session_id, message_text)
+        response = session_manager.get_server().send_prompt(session_id, full_prompt)
 
         if response.control_request:
             await update.message.reply_text(
