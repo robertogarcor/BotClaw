@@ -67,8 +67,11 @@ async def status_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> 
         await update.message.reply_text("Use /init first to set up your project.")
         return
 
+    voice_mode = context.user_data.get("voice_mode", "off")
+    voice_emoji = "🎤" if voice_mode == "on" else "🔇"
+
     status_text = f"📁 *Status*\n\n"
-    status_text += f"Working Dir: `{user.working_dir or 'Not set'}`\n"
+    status_text += f"Dir: `{user.working_dir or 'Not set'}`\n"
 
     if user.working_dir and Path(user.working_dir).exists():
         try:
@@ -79,13 +82,15 @@ async def status_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> 
                 text=True
             )
             if result.returncode == 0:
-                status_text += f"Git Repo: ✅\n"
+                status_text += f"Git: ✅\n"
             else:
-                status_text += f"Git Repo: ❌\n"
+                status_text += f"Git: ❌\n"
         except FileNotFoundError:
             status_text += f"Git: ❌ (not installed)\n"
     else:
-        status_text += f"Git Repo: ❌\n"
+        status_text += f"Git: ❌\n"
+
+    status_text += f"Voice: {voice_emoji} {voice_mode.upper()}"
 
     await update.message.reply_text(status_text, parse_mode="Markdown")
 
