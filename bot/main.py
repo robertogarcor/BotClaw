@@ -33,6 +33,7 @@ def main():
     application.add_handler(CommandHandler("cancel", commands.cancel_command))
     application.add_handler(CommandHandler("sessions", commands.sessions_command))
     application.add_handler(CommandHandler("mcp", commands.mcp_command))
+    application.add_handler(CommandHandler("skills", commands.skills_command))
     application.add_handler(CommandHandler("use", commands.use_command))
     application.add_handler(CommandHandler("last", commands.last_command))
     application.add_handler(CommandHandler("voice", commands.voice_command))

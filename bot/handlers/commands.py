@@ -49,6 +49,7 @@ async def help_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> No
         
         "🔧 *Utilities*\n"
         "/mcp - Show MCP servers\n"
+        "/skills - Show project skills\n"
         "/cancel - Cancel current operation\n\n"
         
         "_Just send me a message or voice to chat with OpenCode!_"
@@ -364,6 +365,55 @@ async def mcp_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> Non
         response_text += f"{status_emoji} *{name}*\n"
         if status.get("status"):
             response_text += f"   Status: {status.get('status')}\n"
+
+    await update.message.reply_text(response_text[:4096], parse_mode="Markdown")
+
+
+async def skills_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    from bot.services.user_manager import UserManager
+
+    chat_id = update.effective_chat.id
+    user_manager = UserManager()
+    user = user_manager.get_user(chat_id)
+
+    if not user or not user.working_dir:
+        await update.message.reply_text("Use /init to set your project first.")
+        return
+
+    project_path = Path(user.working_dir)
+    skills_dir = project_path / ".agents" / "skills"
+
+    if not skills_dir.exists():
+        await update.message.reply_text("🛠️ *Skills:*\n\nNo skills directory found for this project.")
+        return
+
+    skills = []
+    for item in skills_dir.iterdir():
+        if item.is_dir():
+            skill_md = item / "SKILL.md"
+            if skill_md.exists():
+                try:
+                    content = skill_md.read_text()
+                    name = item.name
+                    description = ""
+                    for line in content.split("\n"):
+                        if line.startswith("description:"):
+                            description = line.replace("description:", "").strip()
+                            break
+                    skills.append({"name": name, "description": description})
+                except Exception:
+                    pass
+
+    if not skills:
+        await update.message.reply_text("🛠️ *Skills:*\n\nNo skills found for this project.")
+        return
+
+    response_text = "🛠️ *Skills*\n\n"
+    for skill in skills:
+        response_text += f"• *{skill['name']}*\n"
+        if skill['description']:
+            response_text += f"  {skill['description']}\n"
+        response_text += "\n"
 
     await update.message.reply_text(response_text[:4096], parse_mode="Markdown")
 
