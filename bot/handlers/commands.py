@@ -1,6 +1,6 @@
 import subprocess
 from pathlib import Path
-from telegram import Update
+from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import ContextTypes
 
 from bot.config.settings import Settings
@@ -314,19 +314,36 @@ async def sessions_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -
             await update.message.reply_text("No TUI sessions found.\nUse /init to set your project first.")
         return
 
-    response_text = "📋 Sessions:\n\n"
+    response_text = "📋 *Sessions*\n\n"
+
     for session in filtered_sessions[:10]:
         session_id = session.get("id", "")
-        title = session.get("title", "Untitled")
-        directory = session.get("directory", "")
-        is_current = directory.rstrip("/") == user_project.rstrip("/") if user_project else False
-        marker = "✅" if is_current else "•"
-        response_text += f"{marker} {session_id[:20]}\n"
-        response_text += f"  Title: {title}\n"
-        response_text += f"  Dir: {directory}\n\n"
+        title = session.get("title", "")
+        project_path = ""
 
-    response_text += "\nUse /use <session_id> to select one, or /last to use the latest."
-    await update.message.reply_text(response_text[:4096])
+        if title.startswith("BotClaw session for "):
+            project_path = title.replace("BotClaw session for ", "").strip()
+            if project_path:
+                title_clean = Path(project_path).name
+            else:
+                title_clean = "undefined"
+        else:
+            title_clean = title.strip() if title.strip() else "undefined"
+
+        response_text += f"• `{session_id}`\n"
+        response_text += f"  Title: {title_clean}\n"
+        if project_path:
+            response_text += f"  Path: {project_path}\n"
+        else:
+            response_text += f"  Path: undefined\n"
+
+    if not filtered_sessions:
+        await update.message.reply_text("No sessions available.")
+        return
+
+    response_text += "\n*Tap a button to select, or use `/use <id>` / `/last` *"
+
+    await update.message.reply_text(response_text, parse_mode="Markdown")
 
 
 async def mcp_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
