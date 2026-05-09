@@ -106,7 +106,8 @@ class OpenCodeServer(BaseServer):
                         text_parts.append(f"[Tool: {part.get('tool', 'unknown')}]")
 
                 if text_parts:
-                    return ServerResponse(content="\n".join(text_parts))
+                    info_data = response_data.get("info", {})
+                    return ServerResponse(content="\n".join(text_parts), info=info_data)
 
             return ServerResponse(content="Response received")
 

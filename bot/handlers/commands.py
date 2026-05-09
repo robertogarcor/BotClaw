@@ -61,6 +61,10 @@ async def help_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> No
 
 async def status_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     from bot.services.user_manager import UserManager
+    from bot.services.session_manager import SessionManager
+    from bot.servers.factory import ServerFactory
+    from bot.config.settings import Settings
+    import subprocess
 
     chat_id = update.effective_chat.id
     user_manager = UserManager()
@@ -73,8 +77,39 @@ async def status_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> 
     voice_mode = context.user_data.get("voice_mode", "off")
     voice_emoji = "🎤" if voice_mode == "on" else "🔇"
 
+    project_name = Path(user.working_dir).name if user.working_dir else "Not set"
+
     status_text = f"📁 *Status*\n\n"
+    status_text += f"Project: `{project_name}`\n"
     status_text += f"Dir: `{user.working_dir or 'Not set'}`\n"
+
+    session_manager = SessionManager()
+    session = session_manager.get_session(chat_id)
+    if session and session.session_id:
+        server = ServerFactory.create_opencode(
+            url=Settings.OPENCODE_SERVER_URL,
+            password=Settings.OPENCODE_SERVER_PASSWORD
+        )
+        
+        status_text += f"Session: `{session.session_id}`\n"
+
+        try:
+            response = server.send_prompt(session.session_id, ".")
+            if hasattr(response, 'info') and response.info:
+                model_id = response.info.get("modelID", "unknown")
+                provider_id = response.info.get("providerID", "unknown")
+                agent = response.info.get("agent", "unknown")
+                mode = response.info.get("mode", "unknown")
+                status_text += f"Model: `{model_id}` ({provider_id})\n"
+                status_text += f"Agent: `{agent}` | Mode: `{mode}`\n"
+            else:
+                status_text += "Model: (info not available)\n"
+                status_text += "Agent: (info not available) | Mode: (info not available)\n"
+        except Exception as e:
+            status_text += "Model: (error getting info)\n"
+            status_text += "Agent: (error) | Mode: (error)\n"
+    else:
+        status_text += "Session: ❌ None\n"
 
     if user.working_dir and Path(user.working_dir).exists():
         try:

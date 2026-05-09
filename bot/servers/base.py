@@ -14,6 +14,7 @@ class ControlRequest:
 class ServerResponse:
     content: str
     control_request: Optional[ControlRequest] = None
+    info: Optional[dict] = None
 
 
 class BaseServer(ABC):
