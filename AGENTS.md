@@ -38,7 +38,7 @@ Telegram bot that interfaces with OpenCode CLI. Each Telegram user has their own
 | `/clone <url>` | Clone git repo |
 | `/new` | Start new session |
 | `/sessions` | List TUI sessions |
-| `/voice [on/off/tts/status]` | Toggle voice responses |
+| `/voice [on/off/status]` | Toggle voice responses |
 | `/start`, `/help`, `/status`, `/mcp` | Standard commands |
 
 

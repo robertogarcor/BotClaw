@@ -110,7 +110,7 @@ async def handle_control_response(update: Update, context: ContextTypes.DEFAULT_
 
 async def send_response_with_voice(update: Update, context: ContextTypes.DEFAULT_TYPE, text: str, voice_mode: str) -> None:
     logger.info(f"send_response_with_voice called with voice_mode: {voice_mode}")
-    if voice_mode in ["voice", "tts"]:
+    if voice_mode == "on":
         try:
             from bot.services.tts import synthesize_to_opus
             from bot.services.audio_utils import cleanup_temp_files

@@ -43,8 +43,7 @@ async def help_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> No
         
         "🎤 *Voice*\n"
         "/voice - Toggle voice mode\n"
-        "/voice on - Reply in voice when you send voice\n"
-        "/voice tts - Always reply in voice\n"
+        "/voice on - All replies as voice\n"
         "/voice off - Text replies only\n"
         "/voice status - Show voice mode\n\n"
         
@@ -421,27 +420,21 @@ async def voice_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> N
     chat_id = update.effective_chat.id
     args = context.args
 
-    current_mode = context.user_data.get("voice_mode", "off")
-
     if not args:
-        if current_mode == "off":
-            new_mode = "voice"
-            context.user_data["voice_mode"] = new_mode
-            await update.message.reply_text("🎤 Voice mode: ON\nReplies will be sent as voice when you send voice messages.")
+        current = context.user_data.get("voice_mode", "off")
+        new_mode = "off" if current == "on" else "on"
+        context.user_data["voice_mode"] = new_mode
+        if new_mode == "on":
+            await update.message.reply_text("🎤 Voice mode: ON\nAll replies will be sent as voice.")
         else:
-            context.user_data["voice_mode"] = "off"
             await update.message.reply_text("🔇 Voice mode: OFF\nReplies will be sent as text.")
         return
 
     subcommand = args[0].lower()
 
     if subcommand == "on":
-        context.user_data["voice_mode"] = "voice"
-        await update.message.reply_text("🎤 Voice mode: ON\nWill respond in voice when you send voice messages.")
-
-    elif subcommand == "tts":
-        context.user_data["voice_mode"] = "tts"
-        await update.message.reply_text("🎤 Voice mode: TTS\nWill ALWAYS respond in voice for all messages.")
+        context.user_data["voice_mode"] = "on"
+        await update.message.reply_text("🎤 Voice mode: ON\nAll replies will be sent as voice.")
 
     elif subcommand == "off":
         context.user_data["voice_mode"] = "off"
@@ -450,17 +443,15 @@ async def voice_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> N
     elif subcommand == "status":
         mode = context.user_data.get("voice_mode", "off")
         status_text = f"🎤 Voice Mode: *{mode}*\n\n"
-        status_text += "• `off` - Text replies only\n"
-        status_text += "• `voice` - Voice replies when you send voice\n"
-        status_text += "• `tts` - Voice replies for ALL messages\n"
+        status_text += "• `on` - All replies as voice\n"
+        status_text += "• `off` - Text replies only"
         await update.message.reply_text(status_text, parse_mode="Markdown")
 
     else:
         await update.message.reply_text(
-            "Usage: /voice [on|off|tts|status]\n"
-            "  /voice - Toggle (on/off)\n"
-            "  /voice on - Respond in voice when you send voice\n"
-            "  /voice tts - Always respond in voice\n"
+            "Usage: /voice [on|off|status]\n"
+            "  /voice - Toggle on/off\n"
+            "  /voice on - All replies as voice\n"
             "  /voice off - Text replies only\n"
             "  /voice status - Show current mode"
         )
