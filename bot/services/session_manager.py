@@ -78,6 +78,21 @@ class SessionManager:
 
         return session_id
 
+    def create_session_with_dir(self, chat_id: int, working_dir: str) -> str:
+        server = self._get_server()
+        session_id = server.create_session(working_dir)
+
+        if session_id:
+            conn = sqlite3.connect(self.db_path)
+            conn.execute(
+                "INSERT OR REPLACE INTO sessions (chat_id, session_id, working_dir) VALUES (?, ?, ?)",
+                (chat_id, session_id, working_dir)
+            )
+            conn.commit()
+            conn.close()
+
+        return session_id
+
     def set_working_dir(self, chat_id: int, working_dir: str) -> None:
         conn = sqlite3.connect(self.db_path)
         cursor = conn.execute(

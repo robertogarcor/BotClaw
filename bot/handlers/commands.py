@@ -219,9 +219,18 @@ async def clone_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> N
 
 async def new_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     from bot.services.session_manager import SessionManager
+    from bot.services.user_manager import UserManager
 
     chat_id = update.effective_chat.id
     session_manager = SessionManager()
+    user_manager = UserManager()
+
+    user = user_manager.get_user(chat_id)
+    working_dir = user.working_dir if user and user.working_dir else ""
+
+    if not working_dir:
+        await update.message.reply_text("Set your project first with /init <path>")
+        return
 
     server = ServerFactory.create_opencode(
         url=Settings.OPENCODE_SERVER_URL,
@@ -229,10 +238,10 @@ async def new_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> Non
     )
 
     session_manager.set_server(server)
-    new_session_id = session_manager.create_session(chat_id)
+    new_session_id = session_manager.create_session_with_dir(chat_id, working_dir)
 
     if new_session_id:
-        await update.message.reply_text(f"✅ New session created!")
+        await update.message.reply_text(f"✅ New session created for:\n`{working_dir}`", parse_mode="Markdown")
     else:
         await update.message.reply_text("❌ Failed to create new session")
 
@@ -268,16 +277,32 @@ async def sessions_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -
         return
 
     user_dir = user_project.rstrip("/") if user_project else ""
+    user_dir_basename = Path(user_project).name if user_project else ""
+
+    logger.info(f"Filtering sessions for user_dir: {user_dir}")
 
     filtered_sessions = []
     for session in sessions:
         directory = session.get("directory", "").rstrip("/")
-        if directory and directory not in ["", "/home/administrador", str(Path.home()).rstrip("/")]:
-            if user_dir:
+        title = session.get("title", "")
+        logger.info(f"Session: directory={directory}, title={title}")
+
+        match = False
+        if user_dir:
+            if directory and directory not in ["", "/home/administrador", str(Path.home()).rstrip("/")]:
                 if directory.startswith(user_dir) or user_dir.startswith(directory):
-                    filtered_sessions.append(session)
-            else:
-                filtered_sessions.append(session)
+                    match = True
+            if user_dir_basename and user_dir_basename in title:
+                match = True
+        else:
+            if directory and directory not in ["", "/home/administrador"]:
+                match = True
+
+        if match:
+            logger.info(f"Session matches: {title}")
+            filtered_sessions.append(session)
+        else:
+            logger.info(f"Session filtered out: {title}")
 
     if not filtered_sessions:
         if user_project:
@@ -341,21 +366,30 @@ async def use_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> Non
         )
         return
 
-    session_id = args[0].strip()
-    logger.info(f"use_command: trying session_id={session_id}")
+    session_id_prefix = args[0].strip()
+    logger.info(f"use_command: trying session_id={session_id_prefix}")
 
     server = ServerFactory.create_opencode(
         url=Settings.OPENCODE_SERVER_URL,
         password=Settings.OPENCODE_SERVER_PASSWORD
     )
 
-    session_details = server.get_session_details(session_id)
-    logger.info(f"use_command: session_details={session_details}")
+    session_details = server.get_session_details(session_id_prefix)
+
+    if not session_details:
+        sessions = server.list_sessions()
+        for session in sessions:
+            if session.get("id", "").startswith(session_id_prefix):
+                session_id = session.get("id", "")
+                session_details = server.get_session_details(session_id)
+                logger.info(f"use_command: found by prefix: {session_id}")
+                break
 
     if not session_details:
         await update.message.reply_text("❌ Session not found.")
         return
 
+    session_id = session_details.get("id", session_id_prefix)
     session_manager = SessionManager()
     session_manager.set_session_id(chat_id, session_id)
 
@@ -372,8 +406,24 @@ async def last_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> No
     from bot.services.user_manager import UserManager
 
     chat_id = update.effective_chat.id
+    session_manager = SessionManager()
     user_manager = UserManager()
     user = user_manager.get_user(chat_id)
+
+    saved_session = session_manager.get_session(chat_id)
+    if saved_session.session_id:
+        server = ServerFactory.create_opencode(
+            url=Settings.OPENCODE_SERVER_URL,
+            password=Settings.OPENCODE_SERVER_PASSWORD
+        )
+        if server.continue_session(saved_session.session_id):
+            session_manager.set_session_id(chat_id, saved_session.session_id)
+            if saved_session.working_dir:
+                session_manager.set_working_dir(chat_id, saved_session.working_dir)
+            await update.message.reply_text(
+                f"✅ Using saved session:\nID: {saved_session.session_id[:20]}\nDir: {saved_session.working_dir}"
+            )
+            return
 
     if not user or not user.working_dir:
         await update.message.reply_text("Use /init to set your project directory first.")
