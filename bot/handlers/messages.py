@@ -124,6 +124,7 @@ async def send_response_with_voice(update: Update, context: ContextTypes.DEFAULT
                 await update.message.reply_voice(audio_path)
                 cleanup_temp_files(audio_path)
                 logger.info(f"Sent voice response")
+                await update.message.reply_text(f"📝 Texto: {text[:4096]}", parse_mode="Markdown")
                 return
 
         except Exception as e:
