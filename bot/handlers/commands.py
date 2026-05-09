@@ -116,13 +116,21 @@ async def project_command(update: Update, context: ContextTypes.DEFAULT_TYPE) ->
     session = session_manager.get_session(chat_id)
     current_session_id = session.session_id if session.session_id else "None"
 
-    await update.message.reply_text(
-        f"📁 *Project:*\n\n"
-        f"Name: `{project_name}`\n"
-        f"Path: `{user.working_dir}`\n"
-        f"Session: `{current_session_id}`",
-        parse_mode="Markdown"
-    )
+    skills_dir = Path(user.working_dir) / ".agents" / "skills"
+    skills = []
+    if skills_dir.exists():
+        for item in skills_dir.iterdir():
+            if item.is_dir():
+                skills.append(item.name)
+
+    response = f"📁 *Project:*\n\n"
+    response += f"Name: `{project_name}`\n"
+    response += f"Path: `{user.working_dir}`\n"
+    response += f"Session: `{current_session_id}`\n"
+    if skills:
+        response += f"Skills: {', '.join(skills)}"
+
+    await update.message.reply_text(response, parse_mode="Markdown")
 
 
 async def init_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
