@@ -1,68 +1,46 @@
-# BotClaw - Agent Instructions
+# BotClaw - Instrucciones del Agente
 
-## ⚠️ START HERE: Memory Check
+## ⚠️ EMPIEZA AQUÍ: Revisión de Memoria y Documentación
 
-1. Call `mem_context` - Get recent session context
-2. Call `mem_search` with keywords related to your task - Check for prior work
+1. Llama a `mem_context` - Obtener contexto de sesión reciente
+2. Llama a `mem_search` con palabras clave relacionadas a tu tarea - Buscar trabajo previo
+3. Lee AGENTS.md, SPEC.md, HISTORY.md y README.md - Revisar contexto del proyecto
 
-## Project Overview
+## Rol del Agente
 
-Telegram bot that interfaces with OpenCode CLI. Each Telegram user has their own session and working directory (multi-tenant).
+- **Orquestador del proyecto**: Coordino todas las tareas y decisiones
+- **Experto en Python**: Dominio profundo del lenguaje y su ecosistema
+- **Líder del proyecto**: Tomo decisiones técnicas y guío la arquitectura
+- **Puedes crear subagentes** especializados en tareas concretas cuando sea necesario
+- **Puedes crear nuevas skills** siguiendo las convenciones de skill-creator (ver `.agents/skills/`)
+- **Documentación**: https://opencode.ai/docs/es
 
-## Tech Stack
+## Contexto del Proyecto en Mensajes
 
-- Python 3.x + virtual environment
-- python-telegram-bot
-- SQLite (users + sessions tables)
-- `opencode serve` on port **4097** (not 4096)
+Cuando el usuario envía un mensaje, el bot le añade el prefijo `[INFO] Proyecto activo: <nombre> | Directorio: <ruta>` para que el agente sepa el proyecto activo.
 
-## Key Architecture
+## Problemas Comunes
 
-- `bot/handlers/` - commands.py, messages.py, voice.py, callbacks.py
-- `bot/services/` - session_manager.py, user_manager.py, tts.py, stt.py
-- `bot/servers/` - opencode.py (API v1.14.41)
+- "Connection refused" en puerto 4096 → el servidor corre en 4097
+- TTS devuelve archivo vacío → usar `text.strip()` + voz es-MX-DaliaNeural
 
-## Commands
+## Arquitectura
 
-| Command | Description |
-|---------|-------------|
-| `/init <path>` | Set working directory |
-| `/project` | Show current project |
-| `/clone <url>` | Clone git repo |
-| `/new` | Start new session |
-| `/sessions` | List sessions for current project |
-| `/use <id>` | Select session by ID |
-| `/last` | Use last session |
-| `/skills` | Show project skills |
-| `/voice [on/off/status]` | Toggle voice responses |
-| `/status` | Show status with project, git, voice mode |
-| `/start`, `/help`, `/mcp` | Standard commands |
+- **Bot = puente**: Solo transmite mensajes, no tiene contexto propio
+- **LLM (OpenCode)**: Tiene la sesión y memoria del proyecto
+- Al hacer `/init` a diferente proyecto → cargar sesión más reciente de ese proyecto (no crear nueva)
 
-## Project Context in Messages
+## Protocolo de Memoria Engram
 
-When user sends a message, the bot prefixes it with `[Proyecto: <name>]` so the agent knows the active project.
+- Inicio: `mem_context` + `mem_search`
+- Después de fix o trabajo significativo: `mem_save`
+- Fin de sesión: `mem_session_summary`
 
-## Voice Feature
+## Gestión de Tareas
 
-- STT: faster-whisper (local, no API key)
-- TTS: edge-tts + ffmpeg (convert to Opus for Telegram)
-- Voice mode stored in SQLite (`voice_mode` column)
-
-**TTS**: Use `text.strip()` + voice `es-MX-DaliaNeural`
-
-## Common Issues
-
-- "Connection refused" on port 4096 → server runs on 4097
-- TTS returns empty file → use `text.strip()` + es-MX-DaliaNeural voice
-
-## Engram Memory Protocol
-
-- Start: `mem_context` + `mem_search`
-- After bug fix or significant work: `mem_save`
-- End session: `mem_session_summary`
-
-## Testing
-
-```bash
-pytest tests/ -v
-```
+- **HISTORY.md**: Documentar tareas realizadas y pendientes
+- **Validar funcionalidad**: Cada tarea debe probarse antes de marcar como completada
+- **Commit**: Solo hacer commit cuando la tarea esté validada y funcione correctamente
+- **Skills**: Usar las skills disponibles siguiendo sus convenciones (ver `.agents/skills/`)
+- **Documentación**: Mantener actualizados SPEC.md, HISTORY.md y README.md según avances del proyecto
+- **Memoria**: Documentar cada avance con mem_save

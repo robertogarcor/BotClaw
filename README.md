@@ -1,91 +1,96 @@
 # BotClaw
 
-Telegram bot that provides full access to OpenCode CLI capabilities.
+Bot de Telegram que proporciona acceso completo a las capacidades de OpenCode CLI.
 
-## Status
+## Estado
 
-**Version:** 0.4.0 - Fully functional
+**Versión:** 0.4.0 - Totalmente funcional
 
-## Description
+## Descripción
 
-BotClaw allows users to interact with OpenCode from Telegram as if they were using it locally. Each user has their own session and working directory.
+BotClaw permite a los usuarios interactuar con OpenCode desde Telegram como si lo estuvieran usando localmente. Cada usuario tiene su propia sesión y directorio de trabajo.
 
-## Features
+## Características
 
-- Multi-tenant: Each Telegram user has independent session
-- OpenCode API v1.14.41 compatible
-- SQLite persistence for users and sessions
-- Extensible architecture for future AI servers
+- Multi-tenant: Cada usuario de Telegram tiene sesión independiente
+- Compatible con API de OpenCode v1.14.41
+- Persistencia en SQLite para usuarios y sesiones
+- Arquitectura extensible para futuros servidores de IA
 
-## Requirements
+## Requisitos
 
 - Python 3.11+
-- OpenCode CLI installed (`opencode serve`)
-- Telegram Bot Token (from @BotFather)
+- OpenCode CLI instalado (`opencode serve`)
+- Token de Bot de Telegram (de @BotFather)
 
-## Setup
+## Configuración
 
-1. **Create virtual environment:**
+1. **Crear entorno virtual:**
    ```bash
    python3 -m venv .venv
    source .venv/bin/activate
    ```
 
-2. **Install dependencies:**
+2. **Instalar dependencias:**
    ```bash
    pip install -r requirements.txt
    ```
 
-3. **Configure environment:**
+3. **Configurar entorno:**
    ```bash
    cp config/.env.example config/.env
-   # Edit .env with your credentials
+   # Editar .env con tus credenciales
    ```
 
-4. **Start OpenCode server:**
+4. **Iniciar servidor de OpenCode:**
    ```bash
-   opencode serve --port 4096
+   opencode serve --port 4097
    ```
 
-5. **Run the bot:**
+5. **Ejecutar el bot:**
    ```bash
    python -m bot.main
    ```
 
-## Commands
+## Comandos
 
-| Command | Description |
+| Comando | Descripción |
 |---------|-------------|
-| `/start` | Register and get welcome message |
-| `/help` | Show help |
-| `/init <path>` | Set your working directory |
-| `/clone <url>` | Clone a git repository |
-| `/new` | Start a new OpenCode session |
-| `/status` | Show current project info |
-| `/sessions` | List available OpenCode sessions |
-| `/mcp` | Show available MCP servers |
+| /start | Registrarse y obtener mensaje de bienvenida |
+| /help | Mostrar ayuda |
+| /init <path> | Establecer tu directorio de trabajo |
+| /clone <url> | Clonar un repositorio git |
+| /new | Iniciar una nueva sesión de OpenCode |
+| /project | Mostrar proyecto actual |
+| /status | Mostrar información del proyecto actual |
+| /sessions | Listar sesiones disponibles de OpenCode |
+| /use <id> | Seleccionar sesión por ID |
+| /last | Usar última sesión |
+| /mcp | Mostrar servidores MCP disponibles |
+| /skills | Mostrar skills del proyecto |
+| /voice on/off | Activar/desactivar respuestas de voz |
 
-## Configuration
+## Configuración
 
-Edit `config/.env`:
+Editar `config/.env`:
 
 ```
-TELEGRAM_BOT_TOKEN=your_token_here
-OPENCODE_SERVER_URL=http://localhost:4096
-OPENCODE_SERVER_PASSWORD=optional
+TELEGRAM_BOT_TOKEN=tu_token_aqui
+OPENCODE_SERVER_URL=http://localhost:4097
+OPENCODE_SERVER_PASSWORD=opcional
 USERS_ALLOWED=user1,user2
 USER_IDS_ALLOWED=123456789,987654321
 LOG_LEVEL=INFO
 ```
 
-## Architecture
+## Arquitectura
 
 ```
-Telegram Users → BotClaw → OpenCode Server (HTTP)
-                  ↓
-            SQLite (users + sessions)
+Usuarios de Telegram → BotClaw → Servidor de OpenCode (HTTP)
+                              ↓
+                      SQLite (users + sessions)
 ```
 
-## License
+## Licencia
 
 MIT

@@ -1,167 +1,169 @@
-# BotClaw - Technical Specification
+# BotClaw - Especificación Técnica
 
-## 1. Overview
+## 1. Visión General
 
-**Project Name:** BotClaw
-**Type:** Telegram Bot / CLI Wrapper
-**Core Functionality:** A Telegram client that provides full access to OpenCode CLI capabilities, enabling users to interact with OpenCode as if using it locally.
-**Target Users:** Developers who want to use OpenCode from their mobile devices via Telegram.
+**Nombre del Proyecto:** BotClaw
+**Tipo:** Bot de Telegram / Wrapper de CLI
+**Funcionalidad Principal:** Cliente de Telegram que proporciona acceso completo a las capacidades de OpenCode CLI, permitiendo a los usuarios interactuar con OpenCode como si lo usaran localmente.
+**Usuarios Objetivo:** Desarrolladores que quieren usar OpenCode desde sus dispositivos móviles a través de Telegram.
 
-## 2. Architecture
+## 2. Arquitectura
 
 ```
 ┌─────────────────────┐      ┌─────────────────────┐
-│   Telegram Users    │─────►│   Bot Telegram      │
-│   (multi-tenant)   │◄──── │   (webhook/polling) │
-└─────────────────────┘      └─────────┬───────────┘
-                                       │
-                   ┌───────────────────┼───────────────────┐
-                   │                   │                   │
-                   ▼                   ▼                   ▼
-            ┌────────────┐     ┌────────────┐     ┌────────────┐
-            │ Session A  │     │ Session B  │     │ Session N  │
-            │ (user A)   │     │ (user B)   │     │ (user N)   │
-            └────────────┘     └────────────┘     └────────────┘
-                   │                   │                   │
-                   └───────────────────┼───────────────────┘
-                                       │
-                                       ▼
-                            ┌─────────────────────┐
-                            │  opencode serve     │
-                            │  (HTTP API :4096)   │
-                            └─────────────────────┘
+│   Usuarios de        │─────►│   Bot de Telegram   │
+│   Telegram           │◄──── │   (webhook/polling) │
+│   (multi-tenant)    │      └─────────┬───────────┘
+└─────────────────────┘                │
+                    ┌─────────────────┼─────────────────┐
+                    │                 │                 │
+                    ▼                 ▼                 ▼
+             ┌────────────┐     ┌────────────┐     ┌────────────┐
+             │ Sesión A   │     │ Sesión B   │     │ Sesión N   │
+             │ (usuario A)│     │ (usuario B)│     │ (usuario N)│
+             └────────────┘     └────────────┘     └────────────┘
+                    │                 │                 │
+                    └─────────────────┼─────────────────┘
+                                      │
+                                      ▼
+                             ┌─────────────────────┐
+                             │   opencode serve     │
+                             │   (HTTP API :4097)   │
+                             └─────────────────────┘
 ```
 
-## 3. Components
+## 3. Componentes
 
-### 3.1 Bot Layer (Telegram)
+### 3.1 Capa de Bot (Telegram)
 
 - **Framework:** python-telegram-bot
-- **Mode:** Webhook (production) or Polling (development)
-- **Handlers:** Commands, Messages, Callbacks
+- **Modo:** Webhook (producción) o Polling (desarrollo)
+- **Handlers:** Comandos, Mensajes, Callbacks, Voz
 
-### 3.2 Service Layer
+### 3.2 Capa de Servicios
 
-| Service | Responsibility |
-|---------|----------------|
-| `OpenCodeClient` | HTTP client for OpenCode API |
-| `SessionManager` | Create/manage sessions per user |
-| `UserManager` | User registration and config |
+| Servicio | Responsabilidad |
+|----------|-----------------|
+| `OpenCodeClient` | Cliente HTTP para la API de OpenCode |
+| `SessionManager` | Crear/gestionar sesiones por usuario |
+| `UserManager` | Registro y configuración de usuarios |
+| `TTS` | Síntesis de voz con edge-tts |
+| `STT` | Reconocimiento de voz con faster-whisper |
 
-### 3.3 Data Layer
+### 3.3 Capa de Datos
 
-- **Database:** SQLite (bot.db)
-- **Tables:** users, sessions
+- **Base de datos:** SQLite (bot.db)
+- **Tablas:** users, sessions
 
-## 4. API Integration
+## 4. Requisitos del Sistema
 
-### OpenCode Server Endpoints
+- Python 3.11+
+- ffmpeg (para convertir audio a formato Opus)
+- Virtual environment recomendado
 
-| Method | Endpoint | Usage |
-|--------|----------|-------|
-| POST | /sessions | Create new session |
-| GET | /sessions/{id} | Get session info |
-| POST | /tui/submit-prompt | Send message to agent |
-| GET | /tui/control/next | Get agent questions |
-| POST | /tui/control/response | Answer agent questions |
-| POST | /tui/execute-command | Run /init, /undo, etc |
+## 5. Dependencias
 
-### Session Management
-
-- **chat_id → session_id** mapping stored in SQLite
-- Each user has independent session with own working directory
-- Sessions persist until explicitly closed or reset
-
-## 5. User Flow
-
-```
-1. /start → Bot registers user, creates empty session
-2. /init /path → User sets working directory
-3. Message → Bot sends to OpenCode, receives response
-4. Agent question → Bot forwards to user, sends answer back
-5. /new → Creates fresh session, keeps same directory
-```
-
-## 6. Configuration
-
-Environment variables (`.env`):
-
-```
-TELEGRAM_BOT_TOKEN=xxx
-OPENCODE_SERVER_URL=http://localhost:4096
-OPENCODE_SERVER_PASSWORD=optional
-USERS_ALLOWED=user1,user2  # Empty = allow all
-LOG_LEVEL=INFO
-```
-
-## 7. Commands
-
-| Command | Args | Description |
-|---------|------|-------------|
-| /start | - | Register and show welcome |
-| /help | - | Show help message |
-| /init | `<path>` | Set working directory |
-| /clone | `<url>` | Clone git repo |
-| /new | - | New session |
-| /status | - | Show current project |
-
-## 8. Error Handling
-
-- **Connection errors:** Retry 3 times, then notify user
-- **Timeout:** 60s max for responses, send "processing" message
-- **Invalid path:** Show clear error, suggest fixes
-- **Session lost:** Auto-recreate, notify user
-
-## 9. File Structure
-
-```
-BotClaw/
-├── bot/
-│   ├── __init__.py
-│   ├── main.py
-│   ├── handlers/
-│   │   ├── __init__.py
-│   │   ├── commands.py
-│   │   ├── messages.py
-│   │   └── callbacks.py
-│   ├── services/
-│   │   ├── __init__.py
-│   │   ├── opencode_client.py
-│   │   ├── session_manager.py
-│   │   └── user_manager.py
-│   └── models/
-│       ├── __init__.py
-│       ├── user.py
-│       └── session.py
-├── config/
-│   ├── __init__.py
-│   ├── settings.py
-│   └── .env.example
-├── data/
-│   └── bot.db
-├── tests/
-│   └── ...
-├── requirements.txt
-├── README.md
-├── CHANGELOG.md
-├── SPEC.md
-└── AGENTS.md
-```
-
-## 10. Dependencies
+### Dependencias de Python
 
 ```
 python-telegram-bot>=20.0
 requests>=2.28.0
 python-dotenv>=1.0.0
 sqlalchemy>=2.0.0
+edge-tts
+faster-whisper
 ```
 
-## 11. Future Enhancements
+## 6. Característica de Voz
 
-- Saved projects list (/projects, /proyecto 1)
-- Interactive buttons menu
-- Admin panel
-- Metrics and logging
-- MCP server configuration
-- Group chat support
+### STT (Speech to Text)
+
+- **Tecnología:** faster-whisper (reconocimiento local, sin API key)
+- **Uso:** El usuario puede enviar mensajes de voz desde Telegram
+
+### TTS (Text to Speech)
+
+- **Tecnología:** edge-tts + ffmpeg
+- **Voz por defecto:** es-MX-DaliaNeural
+- **Conversión:** Se convierte a formato Opus para compatibilidad con Telegram
+- **Activación:** Comando `/voice on` para respuestas en voz
+
+### Flujo de Voz
+
+1. Usuario envía nota de voz → Bot transcribe con faster-whisper
+2. Usuario con voz activada (/voice on) → Bot responde con audio generado
+
+## 7. Integración con API
+
+### Endpoints del Servidor de OpenCode (API v1.14.41)
+
+| Método | Endpoint | Uso |
+|--------|----------|-----|
+| POST | /session | Crear nueva sesión (POST) |
+| GET | /session | Obtener información de sesión |
+| POST | /session/{id}/message | Enviar mensaje al agente |
+| GET | /session/{id} | Obtener detalles de sesión |
+| POST | /session/{id}/control | Responder preguntas del agente |
+
+### Gestión de Sesiones
+
+- **chat_id → session_id** almacenado en SQLite
+- Cada usuario tiene sesión independiente con su propio directorio de trabajo
+- Las sesiones persisten hasta que se cierran o reinician explícitamente
+
+## 8. Flujo de Usuario
+
+```
+1. /start → El bot registra al usuario, crea sesión vacía
+2. /init /path → El usuario establece el directorio de trabajo
+3. Mensaje → El bot envía a OpenCode, recibe respuesta
+4. Pregunta del agente → El bot forwardea al usuario, envía la respuesta
+5. /new → Crea sesión nueva, mantiene el mismo directorio
+```
+
+## 9. Configuración
+
+Variables de entorno (`.env`):
+
+```
+TELEGRAM_BOT_TOKEN=xxx
+OPENCODE_SERVER_URL=http://localhost:4097
+OPENCODE_SERVER_PASSWORD=opcional
+USERS_ALLOWED=user1,user2  # Vacío = permitir todos
+LOG_LEVEL=INFO
+```
+
+## 10. Comandos
+
+| Comando | Argumentos | Descripción |
+|---------|------------|-------------|
+| /start | - | Registro y bienvenida |
+| /help | - | Mensaje de ayuda |
+| /init | `<path>` | Establecer directorio de trabajo |
+| /project | - | Mostrar proyecto actual |
+| /clone | `<url>` | Clonar repositorio git |
+| /new | - | Nueva sesión |
+| /sessions | - | Listar sesiones del proyecto |
+| /use | `<id>` | Seleccionar sesión por ID |
+| /last | - | Usar última sesión |
+| /status | - | Mostrar estado completo |
+| /mcp | - | Mostrar configuración MCP |
+| /skills | - | Mostrar skills del proyecto |
+| /voice | `[on/off/status]` | Control de modo voz |
+| /cancel | - | Cancelar operación |
+
+## 11. Manejo de Errores
+
+- **Errores de conexión:** Reintentar 3 veces, luego notificar al usuario
+- **Timeout:** Máximo 60s para respuestas, enviar mensaje "processing"
+- **Ruta inválida:** Mostrar error claro, sugerir correcciones
+- **Sesión perdida:** Recrear automáticamente, notificar al usuario
+
+## 12. Mejoras Futuras
+
+- Lista de proyectos guardados (/projects, /proyecto 1)
+- Menú con botones interactivos
+- Panel de administración
+- Métricas y logging
+- Configuración de servidor MCP
+- Soporte para chats de grupo
