@@ -1,12 +1,16 @@
 import logging
+import sys
 from pathlib import Path
 
 from telegram.ext import Application, CommandHandler, MessageHandler, CallbackQueryHandler, filters
 
-from bot.config.settings import Settings
-from bot.handlers import commands
-from bot.handlers import messages
-from bot.handlers import callbacks
+try:
+    from .config.settings import Settings
+    from .handlers import commands, messages, callbacks, voice
+except ImportError:
+    sys.path.insert(0, str(Path(__file__).parent.parent))
+    from bot.config.settings import Settings
+    from bot.handlers import commands, messages, callbacks, voice
 
 
 def setup_logging():
@@ -41,7 +45,6 @@ def main():
 
     application.add_handler(CallbackQueryHandler(callbacks.handle_callback))
 
-    from bot.handlers import voice
     application.add_handler(MessageHandler(filters.VOICE, voice.handle_voice))
     application.add_handler(MessageHandler(filters.AUDIO, voice.handle_audio))
 

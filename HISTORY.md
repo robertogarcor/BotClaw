@@ -75,9 +75,9 @@
 ### 3. Import modules desde bot/
 **Descripción:** Al ejecutar `python main.py` desde directorio bot/ falla con ModuleNotFoundError. El import `from bot.config.settings` no funciona porque Python no encuentra el paquete 'bot' desde dentro del directorio bot/.
 
-**Solución propuesta:** Usar imports relativos o cambiar la estructura de imports.
+**Solución implementada:** Usar try/except para imports relativos o absolutos según contexto.
 
-**Estado:** ⏳ Pendiente
+**Estado:** ✅ Completado (2026-05-10)
 
 ---
 
