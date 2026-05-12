@@ -68,7 +68,11 @@
 - `bot/handlers/commands.py`
 - `bot/services/session_manager.py`
 
-**Estado:** ⏳ Pendiente
+**Implementación:**
+- /status: muestra Created y Last access de la sesión local
+- /sessions: muestra Created y Updated de las sesiones de la API
+
+**Estado:** ✅ Completado (2026-05-12)
 
 ---
 

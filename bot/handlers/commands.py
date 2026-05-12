@@ -94,6 +94,11 @@ async def status_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> 
         )
         
         status_text += f"Session: `{session.session_id}`\n"
+        
+        if session.created_at:
+            status_text += f"Created: `{session.created_at}`\n"
+        if session.last_access:
+            status_text += f"Last access: `{session.last_access}`\n"
 
         try:
             response = server.send_prompt(session.session_id, ".")
@@ -374,17 +379,24 @@ async def sessions_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -
     for session in sessions[:10]:
         session_id = session.get("id", "")
         title = session.get("title", "")
-        session_dir = session.get("directory", "")
-        updated = session.get("time", {}).get("updated", 0)
+        time_data = session.get("time", {})
+        created = time_data.get("created", 0)
+        updated = time_data.get("updated", 0)
+        
+        from datetime import datetime
+        if created:
+            created_str = datetime.fromtimestamp(created / 1000).strftime("%Y-%m-%d %H:%M")
+        else:
+            created_str = "unknown"
         
         if updated:
-            from datetime import datetime
             updated_str = datetime.fromtimestamp(updated / 1000).strftime("%Y-%m-%d %H:%M")
         else:
             updated_str = "unknown"
 
         response_text += f"• `{session_id}`\n"
         response_text += f"  Title: {title or 'Untitled'}\n"
+        response_text += f"  Created: {created_str}\n"
         response_text += f"  Updated: {updated_str}\n"
 
     await update.message.reply_text(response_text, parse_mode="Markdown")
