@@ -101,13 +101,22 @@ faster-whisper
 
 | Método | Endpoint | Uso |
 |--------|----------|-----|
-| POST | /session | Crear nueva sesión (POST) |
-| GET | /session | Obtener información de sesión |
-| POST | /session/{id}/message | Enviar mensaje al agente |
+| GET | /session | Listar sesiones (devuelve 0 si CLI abierta) |
+| POST | /session | Crear nueva sesión |
+| GET | /session?directory=/path | **Filtrar sesiones por directorio** |
 | GET | /session/{id} | Obtener detalles de sesión |
+| POST | /session/{id}/message | Enviar mensaje al agente |
 | POST | /session/{id}/control | Responder preguntas del agente |
+| GET | /project | Listar proyectos |
+| GET | /mcp | Listar servidores MCP |
+| GET | /global/health | Estado del servidor |
 
 ### Gestión de Sesiones
+
+- **Filtrar por directorio:** Usar `/session?directory=/path/to/project` para obtener sesiones de un proyecto específico
+- **chat_id → session_id** almacenado en SQLite
+- Cada usuario tiene sesión independiente con su propio directorio de trabajo
+- Las sesiones persisten hasta que se cierran o reinician explícitamente
 
 - **chat_id → session_id** almacenado en SQLite
 - Cada usuario tiene sesión independiente con su propio directorio de trabajo
