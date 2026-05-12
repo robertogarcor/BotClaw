@@ -52,21 +52,24 @@
 
 ### 7. Mejorar formato /sessions y unificar fuentes de datos
 **Descripción:** 
-1. Añadir label "Session:" antes del ID en /sessions
+1. Añadir label "Session:" antes del ID en /sessions ✅
 2. Unificar fuentes de datos:
    - `/init`: muestra datos de API (fuente de verdad) ✅
    - `/status`: usa BD local (sincronizada con API en /init) ✅
-   - `/sessions`: consulta API directamente (confirmar que sea correcto)
+   - `/sessions`: consulta API directamente ✅
 3. Entender el concepto de "last access" en el flujo
 
 **Fuentes de datos:**
 - API = fuente de verdad para sesiones
 - BD local = cache que se actualiza en /init path en /init path
 
-**Archivos involucrados:**
-- `bot/handlers/commands.py` - sessions_command()
+**Archivos modificados:**
+- `bot/handlers/commands.py` - sessions_command() - añadido label "Session:"
+- `bot/services/session_manager.py` - save_session() ahora acepta updated_at de API
 
-**Estado:** ⏳ Pendiente
+**Pendiente:** Entender "last access" en el flujo completo
+
+**Estado:** ⏳ En progreso
 
 ---
 
