@@ -94,6 +94,29 @@
 
 ---
 
+### 6. Nueva estructura de BD simplificada
+**Descripción:** Rediseñar la estructura de BD para separar users y sessions. Users solo tiene chat_id, username, voice_mode. Sessions tiene (chat_id, path) como PK.
+
+**Cambios:**
+- users: chat_id (PK), username, voice_mode
+- sessions: (chat_id, path) como PK, session_id, created_at, updated_at, last_access
+- Flujo /init: consultar API con ?directory=/path, guardar sesión en BD local
+- El código de handlers actualizado para usar session_manager.get_current_path()
+
+**Archivos modificados:**
+- `bot/models/session.py` - Nuevo modelo con path
+- `bot/models/user.py` - Simplificado
+- `bot/services/session_manager.py` - Nueva estructura con métodos init_project, get_sessions_from_api, get_current_path
+- `bot/services/user_manager.py` - Simplificado
+- `bot/handlers/commands.py` - Actualizado init, status, project, skills, sessions
+- `bot/handlers/messages.py` - Actualizado para usar session_manager
+- `bot/handlers/callbacks.py` - Actualizado para usar save_session
+- `scripts/migrate_to_new_schema.py` - Script de migración
+
+**Estado:** ✅ Completado (2026-05-12)
+
+---
+
 ### 4. Mejorar flujo de mensajes al cambiar proyecto
 **Descripción:** Al hacer /init, enviar el contexto (AGENTS.md, SPEC.md) silenciosamente sin mostrar la respuesta del agente. Solo mostrar la respuesta cuando el usuario hable.
 

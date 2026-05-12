@@ -26,9 +26,12 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE, tex
         return
 
     user_manager = UserManager()
-    user_obj = user_manager.get_or_create_user(chat_id, user.username)
+    user_manager.get_or_create_user(chat_id, user.username)
 
-    if not user_obj.working_dir:
+    session_manager = SessionManager()
+    current_path = session_manager.get_current_path(chat_id)
+
+    if not current_path:
         await update.message.reply_text(
             "Please set your working directory first using /init <path>\n"
             "Example: /init /home/user/myproject"
@@ -37,18 +40,15 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE, tex
 
     await update.message.reply_text("⏳ Processing...")
 
-    session_manager = SessionManager()
-
     project_prefix = ""
-    if user_obj and user_obj.working_dir:
-        project_name = Path(user_obj.working_dir).name
-        project_path = user_obj.working_dir
-        project_prefix = f"[INFO] Proyecto activo: {project_name} | Directorio: {project_path}. "
+    if current_path:
+        project_name = Path(current_path).name
+        project_prefix = f"[INFO] Proyecto activo: {project_name} | Directorio: {current_path}. "
         logger.info(f"Sending prompt with project: {project_name}")
 
     full_prompt = project_prefix + message_text
 
-    session_id = session_manager.get_or_create_session(chat_id)
+    session_id = session_manager.get_or_create_session(chat_id, current_path)
 
     if not session_id:
         await update.message.reply_text("❌ Failed to create session. Ensure OpenCode server is running.")

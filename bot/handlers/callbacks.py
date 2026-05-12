@@ -43,11 +43,10 @@ async def select_session_from_callback(update: Update, context: ContextTypes.DEF
         return
 
     session_manager = SessionManager()
-    session_manager.set_session_id(chat_id, session_id)
 
     directory = session_details.get("directory", "")
     if directory:
-        session_manager.set_working_dir(chat_id, directory)
+        session_manager.save_session(chat_id, directory, session_id)
 
     title = session_details.get("title", "Unknown")
     await update.callback_query.edit_message_text(

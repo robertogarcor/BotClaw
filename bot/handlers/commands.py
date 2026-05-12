@@ -60,8 +60,8 @@ async def help_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> No
 
 
 async def status_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
-    from bot.services.user_manager import UserManager
     from bot.services.session_manager import SessionManager
+    from bot.services.user_manager import UserManager
     from bot.servers.factory import ServerFactory
     from bot.config.settings import Settings
     import subprocess
@@ -69,22 +69,24 @@ async def status_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> 
     chat_id = update.effective_chat.id
     user_manager = UserManager()
     user = user_manager.get_user(chat_id)
+    
+    session_manager = SessionManager()
+    current_path = session_manager.get_current_path(chat_id)
 
-    if not user:
+    if not current_path:
         await update.message.reply_text("Use /init first to set up your project.")
         return
 
-    voice_mode = context.user_data.get("voice_mode", "off")
+    voice_mode = context.user_data.get("voice_mode", user.voice_mode if user else "off")
     voice_emoji = "🎤" if voice_mode == "on" else "🔇"
 
-    project_name = Path(user.working_dir).name if user.working_dir else "Not set"
+    project_name = Path(current_path).name
 
     status_text = f"📁 *Status*\n\n"
     status_text += f"Project: `{project_name}`\n"
-    status_text += f"Dir: `{user.working_dir or 'Not set'}`\n"
+    status_text += f"Dir: `{current_path}`\n"
 
-    session_manager = SessionManager()
-    session = session_manager.get_session(chat_id)
+    session = session_manager.get_session(chat_id, current_path)
     if session and session.session_id:
         server = ServerFactory.create_opencode(
             url=Settings.OPENCODE_SERVER_URL,
@@ -111,11 +113,11 @@ async def status_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> 
     else:
         status_text += "Session: ❌ None\n"
 
-    if user.working_dir and Path(user.working_dir).exists():
+    if Path(current_path).exists():
         try:
             result = subprocess.run(
                 ["git", "rev-parse", "--show-toplevel"],
-                cwd=user.working_dir,
+                cwd=current_path,
                 capture_output=True,
                 text=True
             )
@@ -138,20 +140,18 @@ async def project_command(update: Update, context: ContextTypes.DEFAULT_TYPE) ->
     from bot.services.session_manager import SessionManager
 
     chat_id = update.effective_chat.id
-    user_manager = UserManager()
-    user = user_manager.get_user(chat_id)
+    session_manager = SessionManager()
+    current_path = session_manager.get_current_path(chat_id)
 
-    if not user or not user.working_dir:
+    if not current_path:
         await update.message.reply_text("📁 *Project:*\n\nNo project set.\nUse `/init <path>` to set your project.")
         return
 
-    project_name = Path(user.working_dir).name
+    project_name = Path(current_path).name
+    session = session_manager.get_session(chat_id, current_path)
+    current_session_id = session.session_id if session and session.session_id else "None"
 
-    session_manager = SessionManager()
-    session = session_manager.get_session(chat_id)
-    current_session_id = session.session_id if session.session_id else "None"
-
-    skills_dir = Path(user.working_dir) / ".agents" / "skills"
+    skills_dir = Path(current_path) / ".agents" / "skills"
     skills = []
     if skills_dir.exists():
         for item in skills_dir.iterdir():
@@ -160,7 +160,7 @@ async def project_command(update: Update, context: ContextTypes.DEFAULT_TYPE) ->
 
     response = f"📁 *Project:*\n\n"
     response += f"Name: `{project_name}`\n"
-    response += f"Path: `{user.working_dir}`\n"
+    response += f"Path: `{current_path}`\n"
     response += f"Session: `{current_session_id}`\n"
     if skills:
         response += f"Skills: {', '.join(skills)}"
@@ -186,36 +186,20 @@ async def init_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> No
         await update.message.reply_text(f"❌ Path does not exist: {full_path}")
         return
 
-    user_manager = UserManager()
-    user = user_manager.get_user(chat_id)
-    previous_working_dir = user.working_dir if user else ""
-    
-    new_project = previous_working_dir != full_path
-    
-    user_manager.set_working_dir(chat_id, full_path)
+    import logging
+    logger = logging.getLogger(__name__)
 
     session_manager = SessionManager()
+    user_manager = UserManager()
+    user_manager.get_or_create_user(chat_id, update.effective_user.username or str(chat_id))
+
+    logger.info(f"Initializing project: {full_path}")
+    session_id, is_new = session_manager.init_project(chat_id, full_path)
     
-    if new_project:
-        existing_session = session_manager.get_session_by_project(full_path)
-        import logging
-        logger = logging.getLogger(__name__)
-        logger.info(f"Looking for session in: {full_path}")
-        logger.info(f"Found session: {existing_session.session_id if existing_session else 'None'}")
-        
-        if existing_session and existing_session.session_id:
-            session_manager.set_session_id(chat_id, existing_session.session_id)
-            session_manager.set_working_dir(chat_id, full_path)
-            logger.info(f"Using existing session: {existing_session.session_id}")
-            await update.message.reply_text(f"✅ Using existing session for project.")
-        else:
-            logger.info(f"No existing session, creating new one for: {full_path}")
-            await update.message.reply_text("⏳ Creating new session for new project...")
-            new_sid = session_manager.create_session_with_dir(chat_id, full_path)
-            logger.info(f"Created new session: {new_sid}")
+    if is_new:
+        await update.message.reply_text(f"✅ Nueva sesión creada para el proyecto.")
     else:
-        session_id = session_manager.set_working_dir(chat_id, full_path)
-        logger.info(f"Same project, session_id: {session_id}")
+        await update.message.reply_text(f"✅ Sesión existente encontrada para el proyecto.")
 
     logger.info("Checking for AGENTS.md and SPEC.md...")
     agents_path = Path(full_path) / "AGENTS.md"
@@ -240,7 +224,7 @@ async def init_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> No
         except Exception:
             pass
 
-    session = session_manager.get_session(chat_id)
+    session = session_manager.get_session(chat_id, full_path)
     if session and session.session_id and context_text:
         await update.message.reply_text("⏳ Loading project context...")
         try:
@@ -255,14 +239,14 @@ async def init_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> No
             response = server.send_prompt(session.session_id, prompt)
             logger.info(f"Context loaded, response received")
         except Exception as e:
-            import logging
-            logging.getLogger(__name__).error(f"Failed to load context: {e}")
+            logger.error(f"Failed to load context: {e}")
 
     if context_loaded:
         project_name = Path(full_path).name
         await update.message.reply_text(
             f"✅ *{project_name}* configurado\n\n"
             f"Dir: `{full_path}`\n"
+            f"Session: `{session_id}`\n"
             f"📄 Context: {', '.join(context_loaded)}\n\n"
             f"*Listo para recibir mensajes.*",
             parse_mode="Markdown"
@@ -271,7 +255,8 @@ async def init_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> No
         project_name = Path(full_path).name
         await update.message.reply_text(
             f"✅ *{project_name}* configurado\n\n"
-            f"Dir: `{full_path}`\n\n"
+            f"Dir: `{full_path}`\n"
+            f"Session: `{session_id}`\n\n"
             f"*Listo para recibir mensajes.*",
             parse_mode="Markdown"
         )
@@ -359,96 +344,48 @@ async def cancel_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> 
 
 async def sessions_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     from bot.services.session_manager import SessionManager
-    from bot.services.user_manager import UserManager
     import logging
     logger = logging.getLogger(__name__)
 
     chat_id = update.effective_chat.id
+    args = context.args
 
-    user_manager = UserManager()
-    user = user_manager.get_user(chat_id)
-    user_project = user.working_dir if user else ""
+    if args:
+        path = " ".join(args)
+        full_path = str(Path(path).expanduser().resolve())
+    else:
+        await update.message.reply_text("Usage: /sessions <path>\nExample: /sessions /home/user/myproject")
+        return
 
-    logger.info(f"User project: {user_project}")
+    logger.info(f"Listing sessions for: {full_path}")
 
-    server = ServerFactory.create_opencode(
-        url=Settings.OPENCODE_SERVER_URL,
-        password=Settings.OPENCODE_SERVER_PASSWORD
-    )
-
-    sessions = server.list_sessions()
-    logger.info(f"Total sessions: {len(sessions)}")
+    session_manager = SessionManager()
+    sessions = session_manager.get_sessions_from_api(full_path)
 
     if not sessions:
-        await update.message.reply_text("No sessions found.")
+        await update.message.reply_text(
+            f"No sessions found for:\n{full_path}\n\n"
+            "Use /init to initialize the project."
+        )
         return
 
-    user_dir = user_project.rstrip("/") if user_project else ""
-    user_dir_basename = Path(user_project).name if user_project else ""
+    response_text = f"📋 *Sessions for* `{full_path}`\n\n"
 
-    logger.info(f"Filtering sessions for user_dir: {user_dir}")
-
-    filtered_sessions = []
-    for session in sessions:
-        directory = session.get("directory", "").rstrip("/")
-        title = session.get("title", "")
-        logger.info(f"Session: directory={directory}, title={title}")
-
-        match = False
-        if user_dir:
-            if directory and directory not in ["", "/home/administrador", str(Path.home()).rstrip("/")]:
-                if directory.startswith(user_dir) or user_dir.startswith(directory):
-                    match = True
-            if user_dir_basename and user_dir_basename in title:
-                match = True
-        else:
-            if directory and directory not in ["", "/home/administrador"]:
-                match = True
-
-        if match:
-            logger.info(f"Session matches: {title}")
-            filtered_sessions.append(session)
-        else:
-            logger.info(f"Session filtered out: {title}")
-
-    if not filtered_sessions:
-        if user_project:
-            await update.message.reply_text(
-                f"No sessions found for:\n{user_project}\n\n"
-                "Use /new to create a new session, or use /last."
-            )
-        else:
-            await update.message.reply_text("No TUI sessions found.\nUse /init to set your project first.")
-        return
-
-    response_text = "📋 *Sessions*\n\n"
-
-    for session in filtered_sessions[:10]:
+    for session in sessions[:10]:
         session_id = session.get("id", "")
         title = session.get("title", "")
-        project_path = ""
-
-        if title.startswith("BotClaw session for "):
-            project_path = title.replace("BotClaw session for ", "").strip()
-            if project_path:
-                title_clean = Path(project_path).name
-            else:
-                title_clean = "undefined"
+        session_dir = session.get("directory", "")
+        updated = session.get("time", {}).get("updated", 0)
+        
+        if updated:
+            from datetime import datetime
+            updated_str = datetime.fromtimestamp(updated / 1000).strftime("%Y-%m-%d %H:%M")
         else:
-            title_clean = title.strip() if title.strip() else "undefined"
+            updated_str = "unknown"
 
         response_text += f"• `{session_id}`\n"
-        response_text += f"  Title: {title_clean}\n"
-        if project_path:
-            response_text += f"  Path: {project_path}\n"
-        else:
-            response_text += f"  Path: undefined\n"
-
-    if not filtered_sessions:
-        await update.message.reply_text("No sessions available.")
-        return
-
-    response_text += "\n*Tap a button to select, or use `/use <id>` / `/last` *"
+        response_text += f"  Title: {title or 'Untitled'}\n"
+        response_text += f"  Updated: {updated_str}\n"
 
     await update.message.reply_text(response_text, parse_mode="Markdown")
 
@@ -476,18 +413,17 @@ async def mcp_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> Non
 
 
 async def skills_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
-    from bot.services.user_manager import UserManager
+    from bot.services.session_manager import SessionManager
 
     chat_id = update.effective_chat.id
-    user_manager = UserManager()
-    user = user_manager.get_user(chat_id)
+    session_manager = SessionManager()
+    current_path = session_manager.get_current_path(chat_id)
 
-    if not user or not user.working_dir:
+    if not current_path:
         await update.message.reply_text("Use /init to set your project first.")
         return
 
-    project_path = Path(user.working_dir)
-    skills_dir = project_path / ".agents" / "skills"
+    skills_dir = Path(current_path) / ".agents" / "skills"
 
     if not skills_dir.exists():
         await update.message.reply_text("🛠️ *Skills:*\n\nNo skills directory found for this project.")

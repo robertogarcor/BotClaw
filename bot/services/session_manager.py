@@ -1,6 +1,7 @@
 import sqlite3
 from pathlib import Path
-from typing import Optional
+from typing import Optional, List
+from datetime import datetime
 
 from bot.config.settings import Settings
 from bot.models.session import Session
@@ -18,11 +19,13 @@ class SessionManager:
         conn = sqlite3.connect(self.db_path)
         conn.execute("""
             CREATE TABLE IF NOT EXISTS sessions (
-                chat_id INTEGER PRIMARY KEY,
+                chat_id INTEGER,
+                path TEXT,
                 session_id TEXT,
-                working_dir TEXT,
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-                updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                last_access TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                PRIMARY KEY (chat_id, path)
             )
         """)
         conn.commit()
@@ -43,12 +46,15 @@ class SessionManager:
             )
         return self._server
 
-    def get_session(self, chat_id: int) -> Session:
+    def get_session(self, chat_id: int, path: str = None) -> Optional[Session]:
+        if not path:
+            return None
+            
         conn = sqlite3.connect(self.db_path)
         conn.row_factory = sqlite3.Row
         cursor = conn.execute(
-            "SELECT chat_id, session_id, working_dir, created_at FROM sessions WHERE chat_id = ?",
-            (chat_id,)
+            "SELECT chat_id, path, session_id, created_at, updated_at, last_access FROM sessions WHERE chat_id = ? AND path = ?",
+            (chat_id, path)
         )
         row = cursor.fetchone()
         conn.close()
@@ -56,143 +62,117 @@ class SessionManager:
         if row:
             return Session(
                 chat_id=row["chat_id"],
+                path=row["path"],
                 session_id=row["session_id"] or "",
-                working_dir=row["working_dir"] or "",
+                created_at=row["created_at"],
+                updated_at=row["updated_at"],
+                last_access=row["last_access"],
             )
-        return Session(chat_id=chat_id)
+        return None
 
-    def get_session_by_project(self, working_dir: str) -> Session:
-        if not working_dir:
-            return Session(chat_id=0)
-        
-        working_dir = working_dir.rstrip("/")
+    def get_sessions_from_api(self, path: str) -> List[dict]:
+        if not path:
+            return []
         
         server = self._get_server()
-        sessions = server.list_sessions()
         
-        import logging
-        logger = logging.getLogger(__name__)
-        logger.info(f"API sessions count: {len(sessions)}")
-        
-        matching_sessions = []
-        for session in sessions:
-            title = session.get("title", "")
-            if working_dir in title:
-                created_time = session.get("time", {}).get("created", 0)
-                matching_sessions.append({
-                    "session_id": session.get("id"),
-                    "title": title,
-                    "created": created_time
-                })
-                logger.info(f"Found matching session: {session.get('id')}, title: {title}")
-        
-        if not matching_sessions:
-            logger.info(f"No sessions found for: {working_dir}")
-            return Session(chat_id=0)
-        
-        matching_sessions.sort(key=lambda x: x["created"], reverse=True)
-        latest = matching_sessions[0]
-        
-        logger.info(f"Latest session: {latest['session_id']}")
-        
-        return Session(
-            chat_id=0,
-            session_id=latest["session_id"],
-            working_dir=working_dir
-        )
-
-    def create_session(self, chat_id: int) -> str:
-        session = self.get_session(chat_id)
-        working_dir = session.working_dir
-
-        server = self._get_server()
-        session_id = server.create_session(working_dir)
-
-        if session_id:
-            conn = sqlite3.connect(self.db_path)
-            conn.execute(
-                "INSERT OR REPLACE INTO sessions (chat_id, session_id, working_dir) VALUES (?, ?, ?)",
-                (chat_id, session_id, working_dir)
+        try:
+            response = server._session.get(
+                f"{server.url}/session",
+                params={"directory": path},
+                timeout=30
             )
-            conn.commit()
-            conn.close()
-
-        return session_id
-
-    def create_session_with_dir(self, chat_id: int, working_dir: str) -> str:
-        import logging
-        logger = logging.getLogger(__name__)
+            if response.status_code == 200:
+                sessions = response.json()
+                return sessions if isinstance(sessions, list) else []
+        except Exception:
+            pass
         
-        working_dir = working_dir.rstrip("/")
-        
-        server = self._get_server()
-        session_id = server.create_session(working_dir)
-        
-        logger.info(f"Created session: {session_id} for dir: {working_dir}")
+        return []
 
-        if session_id:
-            conn = sqlite3.connect(self.db_path)
-            conn.execute(
-                "INSERT OR REPLACE INTO sessions (chat_id, session_id, working_dir) VALUES (?, ?, ?)",
-                (chat_id, session_id, working_dir)
-            )
-            conn.commit()
-            conn.close()
-            logger.info(f"Saved session to DB: {session_id}, dir: {working_dir}")
-
-        return session_id
-
-    def set_working_dir(self, chat_id: int, working_dir: str) -> None:
+    def save_session(self, chat_id: int, path: str, session_id: str) -> None:
         conn = sqlite3.connect(self.db_path)
-        cursor = conn.execute(
-            "SELECT session_id, working_dir FROM sessions WHERE chat_id = ?",
-            (chat_id,)
-        )
-        row = cursor.fetchone()
-
-        if row and row[0]:
-            session_id = row[0]
-            conn.execute(
-                "UPDATE sessions SET working_dir = ? WHERE chat_id = ?",
-                (working_dir, chat_id)
-            )
-        else:
-            session_id = self._get_server().create_session(working_dir)
-            conn.execute(
-                "INSERT OR REPLACE INTO sessions (chat_id, session_id, working_dir) VALUES (?, ?, ?)",
-                (chat_id, session_id, working_dir)
-            )
-
+        conn.execute("""
+            INSERT OR REPLACE INTO sessions (chat_id, path, session_id, updated_at, last_access)
+            VALUES (?, ?, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
+        """, (chat_id, path, session_id))
         conn.commit()
         conn.close()
 
-    def set_session_id(self, chat_id: int, session_id: str) -> None:
+    def update_last_access(self, chat_id: int, path: str) -> None:
         conn = sqlite3.connect(self.db_path)
-        cursor = conn.execute(
-            "SELECT working_dir FROM sessions WHERE chat_id = ?",
-            (chat_id,)
-        )
-        row = cursor.fetchone()
-        working_dir = row[0] if row else ""
-
         conn.execute(
-            "INSERT OR REPLACE INTO sessions (chat_id, session_id, working_dir) VALUES (?, ?, ?)",
-            (chat_id, session_id, working_dir)
+            "UPDATE sessions SET last_access = CURRENT_TIMESTAMP WHERE chat_id = ? AND path = ?",
+            (chat_id, path)
         )
         conn.commit()
         conn.close()
 
-    def get_or_create_session(self, chat_id: int) -> str:
-        session = self.get_session(chat_id)
-        if session.session_id:
-            server = self._get_server()
-            if server.continue_session(session.session_id):
-                return session.session_id
+    def init_project(self, chat_id: int, path: str) -> tuple[str, bool]:
+        path = path.rstrip("/")
+        server = self._get_server()
+        
+        api_sessions = self.get_sessions_from_api(path)
+        
+        if api_sessions:
+            api_sessions.sort(key=lambda x: x.get("time", {}).get("updated", 0), reverse=True)
+            session_id = api_sessions[0].get("id")
+            self.save_session(chat_id, path, session_id)
+            return session_id, False
+        
+        response = server._session.post(
+            f"{server.url}/session",
+            json={"title": f"BotClaw session for {path}"},
+            timeout=30
+        )
+        
+        if response.status_code == 200 or response.status_code == 201:
+            data = response.json()
+            session_id = data.get("id", "")
+        elif response.status_code == 204:
+            session_id = "default"
+        else:
+            session_id = ""
+        
+        if session_id:
+            self.save_session(chat_id, path, session_id)
+        
+        return session_id, True
 
-        return self.create_session(chat_id)
+    def get_or_create_session(self, chat_id: int, path: str) -> str:
+        session = self.get_session(chat_id, path)
+        if session and session.session_id:
+            self.update_last_access(chat_id, path)
+            return session.session_id
+        
+        session_id, _ = self.init_project(chat_id, path)
+        return session_id
 
-    def clear_session(self, chat_id: int) -> None:
+    def set_session_id(self, chat_id: int, path: str, session_id: str) -> None:
+        self.save_session(chat_id, path, session_id)
+
+    def clear_session(self, chat_id: int, path: str = None) -> None:
         conn = sqlite3.connect(self.db_path)
-        conn.execute("DELETE FROM sessions WHERE chat_id = ?", (chat_id,))
+        if path:
+            conn.execute("DELETE FROM sessions WHERE chat_id = ? AND path = ?", (chat_id, path))
+        else:
+            conn.execute("DELETE FROM sessions WHERE chat_id = ?", (chat_id,))
         conn.commit()
         conn.close()
+
+    def get_current_path(self, chat_id: int) -> Optional[str]:
+        conn = sqlite3.connect(self.db_path)
+        conn.row_factory = sqlite3.Row
+        cursor = conn.execute(
+            "SELECT path FROM sessions WHERE chat_id = ? ORDER BY last_access DESC LIMIT 1",
+            (chat_id,)
+        )
+        row = cursor.fetchone()
+        conn.close()
+        return row["path"] if row else None
+
+    def get_current_session(self, chat_id: int) -> Optional[Session]:
+        path = self.get_current_path(chat_id)
+        if path:
+            return self.get_session(chat_id, path)
+        return None
