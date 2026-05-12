@@ -69,8 +69,9 @@
 - `bot/services/session_manager.py`
 
 **Implementación:**
-- /status: muestra Created y Last access de la sesión local
-- /sessions: muestra Created y Updated de las sesiones de la API
+- /status: muestra Session, Title, Created, Last access (fechas en formato DD-MM-YYYY HH:MM)
+- /sessions: muestra Created y Last access (de API, formato DD-MM-YYYY HH:MM)
+- Fechas no seleccionables, Session y Title seleccionables
 
 **Estado:** ✅ Completado (2026-05-12)
 

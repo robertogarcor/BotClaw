@@ -95,10 +95,38 @@ async def status_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> 
         
         status_text += f"Session: `{session.session_id}`\n"
         
+        try:
+            session_details = server.get_session_details(session.session_id)
+            if session_details:
+                title = session_details.get("title", "")
+                if title:
+                    status_text += f"Title: `{title}`\n"
+        except Exception:
+            pass
+        
         if session.created_at:
-            status_text += f"Created: `{session.created_at}`\n"
+            from datetime import datetime
+            try:
+                if isinstance(session.created_at, str):
+                    dt = datetime.fromisoformat(session.created_at.replace('Z', '+00:00'))
+                else:
+                    dt = session.created_at
+                created_str = dt.strftime("%d-%m-%Y %H:%M")
+            except:
+                created_str = str(session.created_at)
+            status_text += f"Created: {created_str}\n"
+        
         if session.last_access:
-            status_text += f"Last access: `{session.last_access}`\n"
+            from datetime import datetime
+            try:
+                if isinstance(session.last_access, str):
+                    dt = datetime.fromisoformat(session.last_access.replace('Z', '+00:00'))
+                else:
+                    dt = session.last_access
+                last_access_str = dt.strftime("%d-%m-%Y %H:%M")
+            except:
+                last_access_str = str(session.last_access)
+            status_text += f"Last access: {last_access_str}\n"
 
         try:
             response = server.send_prompt(session.session_id, ".")
@@ -385,19 +413,19 @@ async def sessions_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -
         
         from datetime import datetime
         if created:
-            created_str = datetime.fromtimestamp(created / 1000).strftime("%Y-%m-%d %H:%M")
+            created_str = datetime.fromtimestamp(created / 1000).strftime("%d-%m-%Y %H:%M")
         else:
             created_str = "unknown"
         
         if updated:
-            updated_str = datetime.fromtimestamp(updated / 1000).strftime("%Y-%m-%d %H:%M")
+            last_access_str = datetime.fromtimestamp(updated / 1000).strftime("%d-%m-%Y %H:%M")
         else:
-            updated_str = "unknown"
+            last_access_str = "unknown"
 
         response_text += f"• `{session_id}`\n"
         response_text += f"  Title: {title or 'Untitled'}\n"
         response_text += f"  Created: {created_str}\n"
-        response_text += f"  Updated: {updated_str}\n"
+        response_text += f"  Last access: {last_access_str}\n"
 
     await update.message.reply_text(response_text, parse_mode="Markdown")
 
