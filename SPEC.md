@@ -118,10 +118,6 @@ faster-whisper
 - Cada usuario tiene sesión independiente con su propio directorio de trabajo
 - Las sesiones persisten hasta que se cierran o reinician explícitamente
 
-- **chat_id → session_id** almacenado en SQLite
-- Cada usuario tiene sesión independiente con su propio directorio de trabajo
-- Las sesiones persisten hasta que se cierran o reinician explícitamente
-
 ## 8. Flujo de Usuario
 
 ```
