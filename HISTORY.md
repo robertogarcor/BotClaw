@@ -81,6 +81,19 @@
 
 ---
 
+### 5. Actualizar estructura de BD
+**Descripción:** Añadir campos faltantes a las tablas de la BD: users (voice_mode, last_access), sessions (updated_at).
+
+**Archivos modificados:**
+- `bot/services/user_manager.py` - Añadidos métodos para voice_mode y last_access
+- `bot/services/session_manager.py` - Añadido campo updated_at
+- `bot/models/user.py` - Añadido campo last_access
+- `scripts/migrate_db.py` - Script de migración para BD existente
+
+**Estado:** ✅ Completado (2026-05-12)
+
+---
+
 ### 4. Mejorar flujo de mensajes al cambiar proyecto
 **Descripción:** Al hacer /init, enviar el contexto (AGENTS.md, SPEC.md) silenciosamente sin mostrar la respuesta del agente. Solo mostrar la respuesta cuando el usuario hable.
 

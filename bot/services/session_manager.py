@@ -21,7 +21,8 @@ class SessionManager:
                 chat_id INTEGER PRIMARY KEY,
                 session_id TEXT,
                 working_dir TEXT,
-                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
             )
         """)
         conn.commit()
@@ -60,6 +61,46 @@ class SessionManager:
             )
         return Session(chat_id=chat_id)
 
+    def get_session_by_project(self, working_dir: str) -> Session:
+        if not working_dir:
+            return Session(chat_id=0)
+        
+        working_dir = working_dir.rstrip("/")
+        
+        server = self._get_server()
+        sessions = server.list_sessions()
+        
+        import logging
+        logger = logging.getLogger(__name__)
+        logger.info(f"API sessions count: {len(sessions)}")
+        
+        matching_sessions = []
+        for session in sessions:
+            title = session.get("title", "")
+            if working_dir in title:
+                created_time = session.get("time", {}).get("created", 0)
+                matching_sessions.append({
+                    "session_id": session.get("id"),
+                    "title": title,
+                    "created": created_time
+                })
+                logger.info(f"Found matching session: {session.get('id')}, title: {title}")
+        
+        if not matching_sessions:
+            logger.info(f"No sessions found for: {working_dir}")
+            return Session(chat_id=0)
+        
+        matching_sessions.sort(key=lambda x: x["created"], reverse=True)
+        latest = matching_sessions[0]
+        
+        logger.info(f"Latest session: {latest['session_id']}")
+        
+        return Session(
+            chat_id=0,
+            session_id=latest["session_id"],
+            working_dir=working_dir
+        )
+
     def create_session(self, chat_id: int) -> str:
         session = self.get_session(chat_id)
         working_dir = session.working_dir
@@ -79,8 +120,15 @@ class SessionManager:
         return session_id
 
     def create_session_with_dir(self, chat_id: int, working_dir: str) -> str:
+        import logging
+        logger = logging.getLogger(__name__)
+        
+        working_dir = working_dir.rstrip("/")
+        
         server = self._get_server()
         session_id = server.create_session(working_dir)
+        
+        logger.info(f"Created session: {session_id} for dir: {working_dir}")
 
         if session_id:
             conn = sqlite3.connect(self.db_path)
@@ -90,6 +138,7 @@ class SessionManager:
             )
             conn.commit()
             conn.close()
+            logger.info(f"Saved session to DB: {session_id}, dir: {working_dir}")
 
         return session_id
 

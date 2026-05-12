@@ -9,6 +9,7 @@ class User:
     working_dir: str = ""
     voice_mode: str = "off"
     created_at: datetime = None
+    last_access: datetime = None
 
     def __post_init__(self):
         if self.created_at is None:

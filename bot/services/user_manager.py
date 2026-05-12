@@ -19,7 +19,8 @@ class UserManager:
                 username TEXT,
                 working_dir TEXT,
                 voice_mode TEXT DEFAULT 'off',
-                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                last_access TIMESTAMP DEFAULT CURRENT_TIMESTAMP
             )
         """)
         conn.commit()
@@ -29,7 +30,7 @@ class UserManager:
         conn = sqlite3.connect(self.db_path)
         conn.row_factory = sqlite3.Row
         cursor = conn.execute(
-            "SELECT chat_id, username, working_dir, created_at FROM users WHERE chat_id = ?",
+            "SELECT chat_id, username, working_dir, voice_mode, created_at, last_access FROM users WHERE chat_id = ?",
             (chat_id,)
         )
         row = cursor.fetchone()
@@ -40,13 +41,38 @@ class UserManager:
                 chat_id=row["chat_id"],
                 username=row["username"],
                 working_dir=row["working_dir"] or "",
+                voice_mode=row["voice_mode"] or "off",
+                created_at=row["created_at"],
+                last_access=row["last_access"],
             )
         return None
+
+    def update_last_access(self, chat_id: int) -> None:
+        conn = sqlite3.connect(self.db_path)
+        conn.execute(
+            "UPDATE users SET last_access = CURRENT_TIMESTAMP WHERE chat_id = ?",
+            (chat_id,)
+        )
+        conn.commit()
+        conn.close()
+
+    def set_voice_mode(self, chat_id: int, voice_mode: str) -> None:
+        conn = sqlite3.connect(self.db_path)
+        conn.execute(
+            "UPDATE users SET voice_mode = ? WHERE chat_id = ?",
+            (voice_mode, chat_id)
+        )
+        conn.commit()
+        conn.close()
+
+    def get_voice_mode(self, chat_id: int) -> str:
+        user = self.get_user(chat_id)
+        return user.voice_mode if user else "off"
 
     def create_user(self, chat_id: int, username: str) -> User:
         conn = sqlite3.connect(self.db_path)
         conn.execute(
-            "INSERT OR REPLACE INTO users (chat_id, username) VALUES (?, ?)",
+            "INSERT OR REPLACE INTO users (chat_id, username, voice_mode) VALUES (?, ?, 'off')",
             (chat_id, username)
         )
         conn.commit()

@@ -187,11 +187,37 @@ async def init_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> No
         return
 
     user_manager = UserManager()
+    user = user_manager.get_user(chat_id)
+    previous_working_dir = user.working_dir if user else ""
+    
+    new_project = previous_working_dir != full_path
+    
     user_manager.set_working_dir(chat_id, full_path)
 
     session_manager = SessionManager()
-    session_id = session_manager.set_working_dir(chat_id, full_path)
+    
+    if new_project:
+        existing_session = session_manager.get_session_by_project(full_path)
+        import logging
+        logger = logging.getLogger(__name__)
+        logger.info(f"Looking for session in: {full_path}")
+        logger.info(f"Found session: {existing_session.session_id if existing_session else 'None'}")
+        
+        if existing_session and existing_session.session_id:
+            session_manager.set_session_id(chat_id, existing_session.session_id)
+            session_manager.set_working_dir(chat_id, full_path)
+            logger.info(f"Using existing session: {existing_session.session_id}")
+            await update.message.reply_text(f"✅ Using existing session for project.")
+        else:
+            logger.info(f"No existing session, creating new one for: {full_path}")
+            await update.message.reply_text("⏳ Creating new session for new project...")
+            new_sid = session_manager.create_session_with_dir(chat_id, full_path)
+            logger.info(f"Created new session: {new_sid}")
+    else:
+        session_id = session_manager.set_working_dir(chat_id, full_path)
+        logger.info(f"Same project, session_id: {session_id}")
 
+    logger.info("Checking for AGENTS.md and SPEC.md...")
     agents_path = Path(full_path) / "AGENTS.md"
     spec_path = Path(full_path) / "SPEC.md"
 
@@ -214,31 +240,39 @@ async def init_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> No
         except Exception:
             pass
 
-    if session_id and context_text:
+    session = session_manager.get_session(chat_id)
+    if session and session.session_id and context_text:
         await update.message.reply_text("⏳ Loading project context...")
         try:
             server = session_manager.get_server()
             project_name = Path(full_path).name
             prompt = (
-                f"Eres el agente de este proyecto: {project_name}\n\n"
+                f"IMPORTANTE: Proyecto actual = {project_name}\n"
+                f"Directorio de trabajo: {full_path}\n\n"
                 f"Contexto del proyecto:\n{context_text}\n\n"
-                f"Directorio de trabajo: {full_path}\n"
-                f"Este es tu proyecto activo. Usa este contexto para responder preguntas."
+                f"Este es el único proyecto activo. Olvida cualquier proyecto anterior."
             )
-            server.send_prompt(session_id, prompt)
+            response = server.send_prompt(session.session_id, prompt)
+            logger.info(f"Context loaded, response received")
         except Exception as e:
             import logging
             logging.getLogger(__name__).error(f"Failed to load context: {e}")
 
     if context_loaded:
+        project_name = Path(full_path).name
         await update.message.reply_text(
-            f"✅ Working directory set to:\n`{full_path}`\n\n"
-            f"📄 Context loaded: {', '.join(context_loaded)}",
+            f"✅ *{project_name}* configurado\n\n"
+            f"Dir: `{full_path}`\n"
+            f"📄 Context: {', '.join(context_loaded)}\n\n"
+            f"*Listo para recibir mensajes.*",
             parse_mode="Markdown"
         )
     else:
+        project_name = Path(full_path).name
         await update.message.reply_text(
-            f"✅ Working directory set to:\n`{full_path}`",
+            f"✅ *{project_name}* configurado\n\n"
+            f"Dir: `{full_path}`\n\n"
+            f"*Listo para recibir mensajes.*",
             parse_mode="Markdown"
         )
 
