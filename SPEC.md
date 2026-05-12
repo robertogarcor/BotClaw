@@ -95,6 +95,8 @@ faster-whisper
 
 ## 7. Integración con API
 
+**Documentación de la API:** https://opencode.ai/docs/server/
+
 ### Endpoints del Servidor de OpenCode (API v1.14.41)
 
 | Método | Endpoint | Uso |
