@@ -50,6 +50,26 @@
 
 ## Tareas PENDIENTES
 
+### 7. Mejorar formato /sessions y unificar fuentes de datos
+**Descripción:** 
+1. Añadir label "Session:" antes del ID en /sessions
+2. Unificar fuentes de datos:
+   - `/init`: muestra datos de API (fuente de verdad) ✅
+   - `/status`: usa BD local (sincronizada con API en /init) ✅
+   - `/sessions`: consulta API directamente (confirmar que sea correcto)
+3. Entender el concepto de "last access" en el flujo
+
+**Fuentes de datos:**
+- API = fuente de verdad para sesiones
+- BD local = cache que se actualiza en /init path en /init path
+
+**Archivos involucrados:**
+- `bot/handlers/commands.py` - sessions_command()
+
+**Estado:** ⏳ Pendiente
+
+---
+
 ### 1. Cargar sesión reciente al cambiar de proyecto
 **Descripción:** Al hacer /init a un proyecto diferente, buscar la sesión más reciente de ese proyecto en la API y usarla (en lugar de crear una nueva o reutilizar la anterior).
 
@@ -64,14 +84,19 @@
 ### 2. Mostrar fecha de sesión
 **Descripción:** Añadir fecha de creación/actualización de la sesión en los comandos /status y /sessions.
 
-**Archivos involucrados:**
-- `bot/handlers/commands.py`
-- `bot/services/session_manager.py`
-
 **Implementación:**
-- /status: muestra Session, Title, Created, Last access (fechas en formato DD-MM-YYYY HH:MM)
-- /sessions: muestra Created y Last access (de API, formato DD-MM-YYYY HH:MM)
+- /init: muestra Session, Title, Created, Last access (de API, formato DD-MM-YYYY HH:MM)
+- /status: muestra Session, Title, Created, Last access (de BD local, sincronizada con API)
+- /sessions: muestra Created y Last access (de API directamente)
 - Fechas no seleccionables, Session y Title seleccionables
+- /init y /status ahora muestran fechas consistentes (sincronizadas desde API)
+
+**Archivos involucrados:**
+- `bot/handlers/commands.py` - init_command(), status_command(), sessions_command()
+- `bot/services/session_manager.py` - save_session() ahora acepta updated_at de API
+- `bot/models/session.py` - campo updated_at
+
+**Bug fix:** created_at y updated_at ahora se preservan de la API (antes INSERT OR REPLACE los sobreescribía)
 
 **Estado:** ✅ Completado (2026-05-12)
 

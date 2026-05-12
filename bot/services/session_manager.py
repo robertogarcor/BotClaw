@@ -90,12 +90,41 @@ class SessionManager:
         
         return []
 
-    def save_session(self, chat_id: int, path: str, session_id: str) -> None:
+    def save_session(self, chat_id: int, path: str, session_id: str, created_at: str = None, updated_at: str = None) -> None:
         conn = sqlite3.connect(self.db_path)
-        conn.execute("""
-            INSERT OR REPLACE INTO sessions (chat_id, path, session_id, updated_at, last_access)
-            VALUES (?, ?, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
-        """, (chat_id, path, session_id))
+        cursor = conn.cursor()
+        
+        cursor.execute(
+            "SELECT 1 FROM sessions WHERE chat_id = ? AND path = ?",
+            (chat_id, path)
+        )
+        exists = cursor.fetchone() is not None
+        
+        if exists:
+            if created_at:
+                cursor.execute("""
+                    UPDATE sessions 
+                    SET session_id = ?, created_at = ?, updated_at = ?, last_access = ?
+                    WHERE chat_id = ? AND path = ?
+                """, (session_id, created_at, updated_at, updated_at, chat_id, path))
+            else:
+                cursor.execute("""
+                    UPDATE sessions 
+                    SET session_id = ?, updated_at = ?, last_access = ?
+                    WHERE chat_id = ? AND path = ?
+                """, (session_id, updated_at, updated_at, chat_id, path))
+        else:
+            if created_at:
+                cursor.execute("""
+                    INSERT INTO sessions (chat_id, path, session_id, created_at, updated_at, last_access)
+                    VALUES (?, ?, ?, ?, ?, ?)
+                """, (chat_id, path, session_id, created_at, updated_at, updated_at))
+            else:
+                cursor.execute("""
+                    INSERT INTO sessions (chat_id, path, session_id, updated_at, last_access)
+                    VALUES (?, ?, ?, ?, ?)
+                """, (chat_id, path, session_id, updated_at, updated_at))
+        
         conn.commit()
         conn.close()
 
@@ -108,7 +137,7 @@ class SessionManager:
         conn.commit()
         conn.close()
 
-    def init_project(self, chat_id: int, path: str) -> tuple[str, bool]:
+    def init_project(self, chat_id: int, path: str) -> tuple[str, bool, dict]:
         path = path.rstrip("/")
         server = self._get_server()
         
@@ -116,9 +145,22 @@ class SessionManager:
         
         if api_sessions:
             api_sessions.sort(key=lambda x: x.get("time", {}).get("updated", 0), reverse=True)
-            session_id = api_sessions[0].get("id")
-            self.save_session(chat_id, path, session_id)
-            return session_id, False
+            session_data = api_sessions[0]
+            session_id = session_data.get("id")
+            time_data = session_data.get("time", {})
+            created_time = time_data.get("created", 0)
+            updated_time = time_data.get("updated", 0)
+            
+            if created_time:
+                from datetime import datetime
+                created_at = datetime.fromtimestamp(created_time / 1000).strftime("%Y-%m-%d %H:%M:%S")
+                updated_at = datetime.fromtimestamp(updated_time / 1000).strftime("%Y-%m-%d %H:%M:%S") if updated_time else created_at
+            else:
+                created_at = None
+                updated_at = None
+            
+            self.save_session(chat_id, path, session_id, created_at, updated_at)
+            return session_id, False, session_data
         
         response = server._session.post(
             f"{server.url}/session",
@@ -131,13 +173,15 @@ class SessionManager:
             session_id = data.get("id", "")
         elif response.status_code == 204:
             session_id = "default"
+            data = {}
         else:
             session_id = ""
+            data = {}
         
         if session_id:
             self.save_session(chat_id, path, session_id)
         
-        return session_id, True
+        return session_id, True, data
 
     def get_or_create_session(self, chat_id: int, path: str) -> str:
         session = self.get_session(chat_id, path)
@@ -145,7 +189,7 @@ class SessionManager:
             self.update_last_access(chat_id, path)
             return session.session_id
         
-        session_id, _ = self.init_project(chat_id, path)
+        session_id, _, _ = self.init_project(chat_id, path)
         return session_id
 
     def set_session_id(self, chat_id: int, path: str, session_id: str) -> None:

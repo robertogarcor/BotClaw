@@ -100,7 +100,7 @@ async def status_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> 
             if session_details:
                 title = session_details.get("title", "")
                 if title:
-                    status_text += f"Title: `{title}`\n"
+                    status_text += f"Title: {title}\n"
         except Exception:
             pass
         
@@ -227,12 +227,16 @@ async def init_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> No
     user_manager.get_or_create_user(chat_id, update.effective_user.username or str(chat_id))
 
     logger.info(f"Initializing project: {full_path}")
-    session_id, is_new = session_manager.init_project(chat_id, full_path)
+    session_id, is_new, session_data = session_manager.init_project(chat_id, full_path)
     
-    if is_new:
-        await update.message.reply_text(f"✅ Nueva sesión creada para el proyecto.")
-    else:
-        await update.message.reply_text(f"✅ Sesión existente encontrada para el proyecto.")
+    title = session_data.get("title", "") if session_data else ""
+    time_data = session_data.get("time", {}) if session_data else {}
+    created_ts = time_data.get("created", 0)
+    updated_ts = time_data.get("updated", 0)
+    
+    from datetime import datetime
+    created_str = datetime.fromtimestamp(created_ts / 1000).strftime("%d-%m-%Y %H:%M") if created_ts else None
+    updated_str = datetime.fromtimestamp(updated_ts / 1000).strftime("%d-%m-%Y %H:%M") if updated_ts else None
 
     logger.info("Checking for AGENTS.md and SPEC.md...")
     agents_path = Path(full_path) / "AGENTS.md"
@@ -276,23 +280,52 @@ async def init_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> No
 
     if context_loaded:
         project_name = Path(full_path).name
-        await update.message.reply_text(
-            f"✅ *{project_name}* configurado\n\n"
-            f"Dir: `{full_path}`\n"
-            f"Session: `{session_id}`\n"
-            f"📄 Context: {', '.join(context_loaded)}\n\n"
-            f"*Listo para recibir mensajes.*",
-            parse_mode="Markdown"
-        )
+        if is_new:
+            msg = (
+                f"✅ *{project_name}* configurado\n\n"
+                f"Dir: `{full_path}`\n"
+                f"Session: `{session_id}`\n"
+                f"📄 Context: {', '.join(context_loaded)}\n\n"
+                f"*Listo para recibir mensajes.*"
+            )
+        else:
+            msg = (
+                f"✅ *{project_name}* configurado\n\n"
+                f"Dir: `{full_path}`\n"
+                f"Session: `{session_id}`\n"
+            )
+            if title:
+                msg += f"Title: {title}\n"
+            if created_str:
+                msg += f"Created: {created_str}\n"
+            if updated_str:
+                msg += f"Last access: {updated_str}\n"
+            msg += f"📄 Context: {', '.join(context_loaded)}\n\n"
+            msg += f"*Listo para recibir mensajes.*"
+        await update.message.reply_text(msg, parse_mode="Markdown")
     else:
         project_name = Path(full_path).name
-        await update.message.reply_text(
-            f"✅ *{project_name}* configurado\n\n"
-            f"Dir: `{full_path}`\n"
-            f"Session: `{session_id}`\n\n"
-            f"*Listo para recibir mensajes.*",
-            parse_mode="Markdown"
-        )
+        if is_new:
+            msg = (
+                f"✅ *{project_name}* configurado\n\n"
+                f"Dir: `{full_path}`\n"
+                f"Session: `{session_id}`\n\n"
+                f"*Listo para recibir mensajes.*"
+            )
+        else:
+            msg = (
+                f"✅ *{project_name}* configurado\n\n"
+                f"Dir: `{full_path}`\n"
+                f"Session: `{session_id}`\n"
+            )
+            if title:
+                msg += f"Title: {title}\n"
+            if created_str:
+                msg += f"Created: {created_str}\n"
+            if updated_str:
+                msg += f"Last access: {updated_str}\n"
+            msg += f"\n*Listo para recibir mensajes.*"
+        await update.message.reply_text(msg, parse_mode="Markdown")
 
 
 async def clone_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
@@ -422,7 +455,7 @@ async def sessions_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -
         else:
             last_access_str = "unknown"
 
-        response_text += f"• `{session_id}`\n"
+        response_text += f"• Session: `{session_id}`\n"
         response_text += f"  Title: {title or 'Untitled'}\n"
         response_text += f"  Created: {created_str}\n"
         response_text += f"  Last access: {last_access_str}\n"
