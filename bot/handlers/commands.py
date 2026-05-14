@@ -135,8 +135,8 @@ async def status_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> 
                 provider_id = response.info.get("providerID", "unknown")
                 agent = response.info.get("agent", "unknown")
                 mode = response.info.get("mode", "unknown")
-                status_text += f"Model: `{model_id}` ({provider_id})\n"
-                status_text += f"Agent: `{agent}` | Mode: `{mode}`\n"
+                status_text += f"Model: {model_id} ({provider_id})\n"
+                status_text += f"Agent: {agent} | Mode: {mode}\n"
             else:
                 status_text += "Model: (info not available)\n"
                 status_text += "Agent: (info not available) | Mode: (info not available)\n"

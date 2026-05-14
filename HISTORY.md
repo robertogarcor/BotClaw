@@ -50,6 +50,33 @@
 
 ## Tareas PENDIENTES
 
+### 8. Corregir selectable fields en /status
+**Descripción:** Quitar backticks de campos no seleccionables en /status (Model, Agent, Mode)
+
+**Archivos involucrados:**
+- `bot/handlers/commands.py` - status_command()
+
+**Implementación:**
+- ✅ Project, Dir, Session: selectable (con backticks)
+- ❌ Title, Created, Last access, Model, Agent, Mode: NO selectable (sin backticks)
+
+**Estado:** ✅ Completado (2026-05-14)
+
+---
+
+### 9. Añadir label "Session:" en /sessions
+**Descripción:** Añadir label "Session:" antes del ID en /sessions
+
+**Archivos involucrados:**
+- `bot/handlers/commands.py` - sessions_command()
+
+**Implementación:**
+- Formato: `• Session: \`ses_xxx\``
+
+**Estado:** ✅ Completado (ya estaba implementado)
+
+---
+
 ### 7. Mejorar formato /sessions y unificar fuentes de datos
 **Descripción:** 
 1. Añadir label "Session:" antes del ID en /sessions ✅
@@ -57,19 +84,17 @@
    - `/init`: muestra datos de API (fuente de verdad) ✅
    - `/status`: usa BD local (sincronizada con API en /init) ✅
    - `/sessions`: consulta API directamente ✅
-3. Entender el concepto de "last access" en el flujo
+3. Corregir selectable fields en /status ✅
 
 **Fuentes de datos:**
 - API = fuente de verdad para sesiones
 - BD local = cache que se actualiza en /init path en /init path
 
 **Archivos modificados:**
-- `bot/handlers/commands.py` - sessions_command() - añadido label "Session:"
+- `bot/handlers/commands.py` - sessions_command() - label "Session:" y selectable fields
 - `bot/services/session_manager.py` - save_session() ahora acepta updated_at de API
 
-**Pendiente:** Entender "last access" en el flujo completo
-
-**Estado:** ⏳ En progreso
+**Estado:** ✅ Completado (2026-05-14)
 
 ---
 
