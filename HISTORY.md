@@ -61,10 +61,10 @@
 ### 2. Mostrar fecha de sesión
 **Descripción:** Añadir fecha de creación/actualización de la sesión en /status y /sessions. Sincronizar created_at y updated_at desde API.
 
-**Implementación:** /init, /status y /sessions muestran fechas. Fechas no seleccionables. Fix: save_session() preserva created_at de API.
+**Implementación:** /init, /status y /sessions muestran fechas. Fechas no seleccionables. Fix: save_session() preserva created_at de API. Fix: usar get_session_details() en vez de send_prompt() para obtener model/agent.
 
 **Archivos:** bot/handlers/commands.py, bot/services/session_manager.py
-**Estado:** ✅ Completado (2026-05-12)
+**Estado:** ✅ Completado (2026-05-14)
 
 ---
 
@@ -116,6 +116,13 @@
 **Descripción:** Añadir label "Session:" antes del ID en formato: `• Session: \`ses_xxx\``
 **Archivos:** bot/handlers/commands.py
 **Estado:** ✅ Completado (2026-05-12)
+
+---
+
+### 10. Fix /status model/agent error
+**Descripción:** /status mostraba "(error getting info)" para Model/Agent. Solución: usar get_session_details() en vez de send_prompt() para obtener info.
+**Archivos:** bot/handlers/commands.py - status_command()
+**Estado:** ✅ Completado (2026-05-14)
 
 ---
 
