@@ -129,12 +129,13 @@ async def status_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> 
             status_text += f"Last access: {last_access_str}\n"
 
         try:
-            response = server.send_prompt(session.session_id, ".")
-            if hasattr(response, 'info') and response.info:
-                model_id = response.info.get("modelID", "unknown")
-                provider_id = response.info.get("providerID", "unknown")
-                agent = response.info.get("agent", "unknown")
-                mode = response.info.get("mode", "unknown")
+            session_details = server.get_session_details(session.session_id)
+            if session_details:
+                model_data = session_details.get("model", {})
+                model_id = model_data.get("id", "unknown")
+                provider_id = model_data.get("providerID", "unknown")
+                agent = session_details.get("agent", "unknown")
+                mode = session_details.get("mode", "unknown")
                 status_text += f"Model: {model_id} ({provider_id})\n"
                 status_text += f"Agent: {agent} | Mode: {mode}\n"
             else:
