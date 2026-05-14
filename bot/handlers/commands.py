@@ -135,7 +135,7 @@ async def status_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> 
                 model_id = model_data.get("id", "unknown")
                 provider_id = model_data.get("providerID", "unknown")
                 agent = session_details.get("agent", "unknown")
-                mode = session_details.get("mode", "unknown")
+                mode = session_details.get("mode", "N/A")
                 status_text += f"Model: {model_id} ({provider_id})\n"
                 status_text += f"Agent: {agent} | Mode: {mode}\n"
             else:
