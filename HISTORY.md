@@ -50,139 +50,72 @@
 
 ## Tareas PENDIENTES
 
-### 8. Corregir selectable fields en /status
-**Descripción:** Quitar backticks de campos no seleccionables en /status (Model, Agent, Mode)
-
-**Archivos involucrados:**
-- `bot/handlers/commands.py` - status_command()
-
-**Implementación:**
-- ✅ Project, Dir, Session: selectable (con backticks)
-- ❌ Title, Created, Last access, Model, Agent, Mode: NO selectable (sin backticks)
-
-**Estado:** ✅ Completado (2026-05-14)
-
----
-
-### 9. Añadir label "Session:" en /sessions
-**Descripción:** Añadir label "Session:" antes del ID en /sessions
-
-**Archivos involucrados:**
-- `bot/handlers/commands.py` - sessions_command()
-
-**Implementación:**
-- Formato: `• Session: \`ses_xxx\``
-
-**Estado:** ✅ Completado (2026-05-12)
-
----
-
-### 7. Mejorar formato /sessions y unificar fuentes de datos
-**Descripción:** 
-1. Añadir label "Session:" antes del ID en /sessions ✅
-2. Unificar fuentes de datos:
-   - `/init`: muestra datos de API (fuente de verdad) ✅
-   - `/status`: usa BD local (sincronizada con API en /init) ✅
-   - `/sessions`: consulta API directamente ✅
-3. Corregir selectable fields en /status ✅
-
-**Fuentes de datos:**
-- API = fuente de verdad para sesiones
-- BD local = cache que se actualiza en /init path en /init path
-
-**Archivos modificados:**
-- `bot/handlers/commands.py` - sessions_command() - label "Session:" y selectable fields
-- `bot/services/session_manager.py` - save_session() ahora acepta updated_at de API
-
-**Estado:** ✅ Completado (2026-05-14)
-
----
-
 ### 1. Cargar sesión reciente al cambiar de proyecto
-**Descripción:** Al hacer /init a un proyecto diferente, buscar la sesión más reciente de ese proyecto en la API y usarla (en lugar de crear una nueva o reutilizar la anterior).
+**Descripción:** Al hacer /init a un proyecto diferente, buscar la sesión más reciente de ese proyecto en la API y usarla.
 
-**Archivos involucrados:**
-- `bot/services/session_manager.py`
-- `bot/handlers/commands.py`
-
+**Archivos involucrados:** bot/services/session_manager.py, bot/handlers/commands.py
 **Estado:** ⏳ Pendiente
 
 ---
 
 ### 2. Mostrar fecha de sesión
-**Descripción:** Añadir fecha de creación/actualización de la sesión en los comandos /status y /sessions.
+**Descripción:** Añadir fecha de creación/actualización de la sesión en /status y /sessions. Sincronizar created_at y updated_at desde API.
 
-**Implementación:**
-- /init: muestra Session, Title, Created, Last access (de API, formato DD-MM-YYYY HH:MM)
-- /status: muestra Session, Title, Created, Last access (de BD local, sincronizada con API)
-- /sessions: muestra Created y Last access (de API directamente)
-- Fechas no seleccionables, Session y Title seleccionables
-- /init y /status ahora muestran fechas consistentes (sincronizadas desde API)
+**Implementación:** /init, /status y /sessions muestran fechas. Fechas no seleccionables. Fix: save_session() preserva created_at de API.
 
-**Archivos involucrados:**
-- `bot/handlers/commands.py` - init_command(), status_command(), sessions_command()
-- `bot/services/session_manager.py` - save_session() ahora acepta updated_at de API
-- `bot/models/session.py` - campo updated_at
-
-**Bug fix:** created_at y updated_at ahora se preservan de la API (antes INSERT OR REPLACE los sobreescribía)
-
+**Archivos:** bot/handlers/commands.py, bot/services/session_manager.py
 **Estado:** ✅ Completado (2026-05-12)
 
 ---
 
 ### 3. Import modules desde bot/
-**Descripción:** Al ejecutar `python main.py` desde directorio bot/ falla con ModuleNotFoundError. El import `from bot.config.settings` no funciona porque Python no encuentra el paquete 'bot' desde dentro del directorio bot/.
-
-**Solución implementada:** Usar try/except para imports relativos o absolutos según contexto.
-
+**Descripción:** ModuleNotFoundError al ejecutar python main.py desde directorio bot/. Solución: try/except para imports relativos/absolutos.
 **Estado:** ✅ Completado (2026-05-10)
 
 ---
 
+### 4. Mejorar flujo de mensajes al cambiar proyecto
+**Descripción:** Al hacer /init, enviar contexto (AGENTS.md, SPEC.md) silenciosamente sin mostrar respuesta del agente.
+**Archivos:** bot/handlers/commands.py, bot/handlers/messages.py
+**Estado:** ⏳ Pendiente
+
+---
+
 ### 5. Actualizar estructura de BD
-**Descripción:** Añadir campos faltantes a las tablas de la BD: users (voice_mode, last_access), sessions (updated_at).
-
-**Archivos modificados:**
-- `bot/services/user_manager.py` - Añadidos métodos para voice_mode y last_access
-- `bot/services/session_manager.py` - Añadido campo updated_at
-- `bot/models/user.py` - Añadido campo last_access
-- `scripts/migrate_db.py` - Script de migración para BD existente
-
+**Descripción:** Añadir campos voice_mode, last_access a users; updated_at a sessions.
+**Archivos:** user_manager.py, session_manager.py, models/user.py, scripts/migrate_db.py
 **Estado:** ✅ Completado (2026-05-12)
 
 ---
 
 ### 6. Nueva estructura de BD simplificada
-**Descripción:** Rediseñar la estructura de BD para separar users y sessions. Users solo tiene chat_id, username, voice_mode. Sessions tiene (chat_id, path) como PK.
-
-**Cambios:**
-- users: chat_id (PK), username, voice_mode
-- sessions: (chat_id, path) como PK, session_id, created_at, updated_at, last_access
-- Flujo /init: consultar API con ?directory=/path, guardar sesión en BD local
-- El código de handlers actualizado para usar session_manager.get_current_path()
-
-**Archivos modificados:**
-- `bot/models/session.py` - Nuevo modelo con path
-- `bot/models/user.py` - Simplificado
-- `bot/services/session_manager.py` - Nueva estructura con métodos init_project, get_sessions_from_api, get_current_path
-- `bot/services/user_manager.py` - Simplificado
-- `bot/handlers/commands.py` - Actualizado init, status, project, skills, sessions
-- `bot/handlers/messages.py` - Actualizado para usar session_manager
-- `bot/handlers/callbacks.py` - Actualizado para usar save_session
-- `scripts/migrate_to_new_schema.py` - Script de migración
-
+**Descripción:** Separar users y sessions. users: chat_id, username, voice_mode. sessions: (chat_id, path) PK, session_id, created_at, updated_at, last_access. Flujo /init: consultar API ?directory=/path.
 **Estado:** ✅ Completado (2026-05-12)
 
 ---
 
-### 4. Mejorar flujo de mensajes al cambiar proyecto
-**Descripción:** Al hacer /init, enviar el contexto (AGENTS.md, SPEC.md) silenciosamente sin mostrar la respuesta del agente. Solo mostrar la respuesta cuando el usuario hable.
+### 7. Mejorar formato /sessions y unificar fuentes de datos
+**Descripción:** Label "Session:" en /sessions, unificar fuentes (API fuente de verdad, BD cache actualizada en /init).
 
-**Archivos involucrados:**
-- `bot/handlers/commands.py`
-- `bot/handlers/messages.py`
+**Fuentes:** /init→API, /status→BD local, /sessions→API directa
+**Archivos:** bot/handlers/commands.py, bot/services/session_manager.py
+**Estado:** ✅ Completado (2026-05-14)
 
-**Estado:** ⏳ Pendiente
+---
+
+### 8. Corregir selectable fields en /status
+**Descripción:** Quitar backticks de Model y Agent en /status (no deben ser seleccionables).
+
+**Selectable:** Project, Dir, Session | **No selectable:** Title, Created, Last access, Model, Agent, Mode
+**Archivos:** bot/handlers/commands.py
+**Estado:** ✅ Completado (2026-05-14)
+
+---
+
+### 9. Añadir label "Session:" en /sessions
+**Descripción:** Añadir label "Session:" antes del ID en formato: `• Session: \`ses_xxx\``
+**Archivos:** bot/handlers/commands.py
+**Estado:** ✅ Completado (2026-05-12)
 
 ---
 
