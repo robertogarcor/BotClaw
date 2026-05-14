@@ -296,7 +296,8 @@ async def init_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> No
                 f"Session: `{session_id}`\n"
             )
             if title:
-                msg += f"Title: {title}\n"
+                title_escaped = title.replace("_", r"\_").replace("*", r"\*").replace("`", r"\`")
+                msg += f"Title: {title_escaped}\n"
             if created_str:
                 msg += f"Created: {created_str}\n"
             if updated_str:
@@ -320,7 +321,8 @@ async def init_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> No
                 f"Session: `{session_id}`\n"
             )
             if title:
-                msg += f"Title: {title}\n"
+                title_escaped = title.replace("_", r"\_").replace("*", r"\*").replace("`", r"\`")
+                msg += f"Title: {title_escaped}\n"
             if created_str:
                 msg += f"Created: {created_str}\n"
             if updated_str:
