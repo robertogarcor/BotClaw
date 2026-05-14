@@ -133,6 +133,13 @@
 
 ---
 
+### 12. Lentitud en /init por carga de AGENTS.md y SPEC.md
+**Descripción:** El comando /init es lento al cargar el contexto de AGENTS.md y SPEC.md. Posibles soluciones: cargar en background, cachear contenido, o enviar sin esperar respuesta del agente.
+
+**Estado:** ⏳ Pendiente
+
+---
+
 ## Notas Técnicas
 
 - Puerto de OpenCode: **4097** (no 4096)
