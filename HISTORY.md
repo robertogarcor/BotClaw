@@ -73,7 +73,7 @@
 **Implementación:**
 - Formato: `• Session: \`ses_xxx\``
 
-**Estado:** ✅ Completado (ya estaba implementado)
+**Estado:** ✅ Completado (2026-05-12)
 
 ---
 
