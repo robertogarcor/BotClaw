@@ -126,6 +126,13 @@
 
 ---
 
+### 11. Obtener Mode en /status
+**Descripción:** get_session_details() no devuelve el campo "mode". send_prompt() lo devuelve pero puede hacer timeout. Opciones: retry con timeout corto, o aceptar N/A.
+
+**Estado:** ⏳ Pendiente
+
+---
+
 ## Notas Técnicas
 
 - Puerto de OpenCode: **4097** (no 4096)
