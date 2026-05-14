@@ -165,6 +165,13 @@ LOG_LEVEL=INFO
 - **Timeout:** Máximo 60s para respuestas, enviar mensaje "processing"
 - **Ruta inválida:** Mostrar error claro, sugerir correcciones
 - **Sesión perdida:** Recrear automáticamente, notificar al usuario
+- **Excepciones en await:** Todas las llamadas await a API, BD u operaciones externas deben tener try/except. Esto incluye:
+  - `server.send_prompt()` - llamadas a API de OpenCode
+  - `server.get_session_details()` - consultas a la API
+  - `session_manager.save_session()` - operaciones de BD
+  - `user_manager.get_user()` - consultas de usuarios
+  - Loguear el tipo de excepción y mensaje para debugging
+  - Notificar al usuario de errores de forma clara
 
 ## 12. Mejoras Futuras
 

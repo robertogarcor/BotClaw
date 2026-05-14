@@ -304,7 +304,10 @@ async def init_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> No
                 msg += f"Last access: {updated_str}\n"
             msg += f"📄 Context: {', '.join(context_loaded)}\n\n"
             msg += f"*Listo para recibir mensajes.*"
-        await update.message.reply_text(msg, parse_mode="Markdown")
+        try:
+            await update.message.reply_text(msg, parse_mode="Markdown")
+        except Exception as e:
+            logger.error(f"Error sending /init message: {type(e).__name__}: {e}")
     else:
         project_name = Path(full_path).name
         if is_new:
@@ -328,7 +331,10 @@ async def init_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> No
             if updated_str:
                 msg += f"Last access: {updated_str}\n"
             msg += f"\n*Listo para recibir mensajes.*"
-        await update.message.reply_text(msg, parse_mode="Markdown")
+        try:
+            await update.message.reply_text(msg, parse_mode="Markdown")
+        except Exception as e:
+            logger.error(f"Error sending /init message: {type(e).__name__}: {e}")
 
 
 async def clone_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:

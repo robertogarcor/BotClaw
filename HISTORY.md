@@ -140,6 +140,15 @@
 
 ---
 
+### 13. Manejo de excepciones en await (API, BD)
+**Descripción:** Todas las llamadas await a API, BD y operaciones externas deben tener try/except para capturar errores. Evita errores silenciosos y crashes del bot.
+
+**Archivos a revisar:** commands.py, messages.py, session_manager.py, user_manager.py
+
+**Estado:** ⏳ Pendiente
+
+---
+
 ## Notas Técnicas
 
 - Puerto de OpenCode: **4097** (no 4096)
