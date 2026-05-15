@@ -277,6 +277,25 @@ bot/handlers/
 
 **Estado:** ✅ Completado (2026-05-15)
 
+---
+
+### 23. Comando /create para crear directorio y sesión
+**Descripción:** Crear comando `/create <path>` que cree el directorio del proyecto (si no existe) e inicialice una nueva sesión de OpenCode para él.
+
+**Implementación:**
+- Crear directorio con `os.makedirs(path, exist_ok=True)`
+- Llamar a `init_project()` para crear sesión
+- Enviar mensaje de confirmación con path y session_id
+- Similar a `/init` pero crea el directorio si no existe
+
+**Archivos:** bot/handlers/commands.py - añadir create_command()
+
+**Estado:** ⏳ Pendiente
+
+---
+
+## Notas Técnicas
+
 - Puerto de OpenCode: **4097** (no 4096)
 - TTS fix: usar `text.strip()` + voz `es-MX-DaliaNeural`
 - Arquitectura: Bot = puente, LLM tiene contexto de sesión
