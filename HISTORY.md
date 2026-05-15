@@ -238,13 +238,16 @@ bot/handlers/
 **Descripción:** Crear nuevo comando `/projects` (plural) que liste todos los proyectos del usuario. El comando `/project` (singular) actual se mantiene para mostrar el proyecto activo.
 
 **Implementación:**
-- `/projects` → listar todos los paths únicos de la tabla sessions del usuario
-- Mostrar nombre del proyecto, path y última sesión asociada
+- `/projects` → consulta API GET /project para obtener todos los proyectos (incluidos CLI)
+- Filtra proyecto "global"
+- Para cada proyecto, obtiene sesión más reciente via API
+- Muestra nombre, path, sesión y último acceso
 - Mantener `/project` como está (muestra proyecto actual)
+- Actualizado /help con /projects
 
-**Archivos:** bot/handlers/commands.py - añadir projects_command()
+**Archivos:** bot/handlers/commands.py - projects_command()
 
-**Estado:** ⏳ Pendiente
+**Estado:** ✅ Completado (2026-05-15)
 
 ---
 

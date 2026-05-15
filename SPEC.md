@@ -148,9 +148,10 @@ LOG_LEVEL=INFO
 | /help | - | Mensaje de ayuda |
 | /init | `<path>` | Establecer directorio de trabajo |
 | /project | - | Mostrar proyecto actual |
+| /projects | - | Listar todos los proyectos (desde API) |
 | /clone | `<url>` | Clonar repositorio git |
 | /new | - | Nueva sesión |
-| /sessions | - | Listar sesiones del proyecto |
+| /sessions | `[path]` | Listar sesiones del proyecto actual o de una ruta específica |
 | /use | `<id>` | Seleccionar sesión por ID |
 | /last | - | Usar última sesión |
 | /status | - | Mostrar estado completo |
@@ -175,7 +176,6 @@ LOG_LEVEL=INFO
 
 ## 12. Mejoras Futuras
 
-- Lista de proyectos guardados (/projects, /proyecto 1)
 - Menú con botones interactivos
 - Panel de administración
 - Métricas y logging

@@ -1,5 +1,6 @@
 import subprocess
 import logging
+from datetime import datetime
 from pathlib import Path
 from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import ContextTypes
@@ -38,6 +39,7 @@ async def help_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> No
         "📁 *Project*\n"
         "/init <path> - Set working directory\n"
         "/project - Show current project info\n"
+        "/projects - List all your projects\n"
         "/clone <url> - Clone git repository\n\n"
         
         "💬 *Sessions*\n"
@@ -205,6 +207,72 @@ async def project_command(update: Update, context: ContextTypes.DEFAULT_TYPE) ->
         response += f"Skills: {', '.join(skills)}"
 
     await update.message.reply_text(response, parse_mode="Markdown")
+
+
+async def projects_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    from bot.services.session_manager import SessionManager
+    from bot.servers.factory import ServerFactory
+
+    chat_id = update.effective_chat.id
+    session_manager = SessionManager()
+
+    try:
+        server = ServerFactory.create_opencode(
+            url=Settings.OPENCODE_SERVER_URL,
+            password=Settings.OPENCODE_SERVER_PASSWORD
+        )
+
+        projects = server._session.get(
+            f"{server.url}/project",
+            timeout=30
+        )
+
+        if projects.status_code != 200:
+            await update.message.reply_text("📂 *Projects:*\n\nFailed to fetch projects from API.")
+            return
+
+        projects_data = projects.json()
+        projects_data = [p for p in projects_data if p.get("id") != "global"]
+
+        if not projects_data:
+            await update.message.reply_text("📂 *Projects:*\n\nNo projects found.\nUse `/init <path>` to start.")
+            return
+
+        response = "📂 *Projects:*\n\n"
+        for project in projects_data:
+            project_path = project.get("worktree", "")
+            time_data = project.get("time", {})
+            created_ts = time_data.get("created", 0)
+            updated_ts = time_data.get("updated", 0)
+
+            if created_ts:
+                created_str = datetime.fromtimestamp(created_ts / 1000).strftime("%d-%m-%Y %H:%M")
+            else:
+                created_str = "unknown"
+
+            if updated_ts:
+                last_access_str = datetime.fromtimestamp(updated_ts / 1000).strftime("%d-%m-%Y %H:%M")
+            else:
+                last_access_str = "unknown"
+
+            sessions = session_manager.get_sessions_from_api(project_path)
+            session_id = sessions[0].get("id", "None") if sessions else "None"
+
+            if not project_path and sessions:
+                project_path = sessions[0].get("directory", "")
+
+            project_name = Path(project_path).name if project_path else "unknown"
+
+            response += f"• *{project_name}*\n"
+            response += f"  Path: `{project_path}`\n"
+            response += f"  Session: `{session_id}`\n"
+            response += f"  Created: {created_str}\n"
+            response += f"  Last access: {last_access_str}\n\n"
+
+        await update.message.reply_text(response[:4096], parse_mode="Markdown")
+    except Exception as e:
+        logger.error(f"{type(e).__name__}: {e}")
+        await update.message.reply_text(f"❌ Error: {str(e)}")
 
 
 async def init_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
