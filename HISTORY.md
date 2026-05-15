@@ -53,8 +53,10 @@
 ### 1. Cargar sesión reciente al cambiar de proyecto
 **Descripción:** Al hacer /init a un proyecto diferente, buscar la sesión más reciente de ese proyecto en la API y usarla.
 
+**Implementación:** /init consulta la API con ?directory=/path, ordena por updated_at y usa la sesión más reciente. Si no hay sesiones, crea una nueva.
+
 **Archivos involucrados:** bot/services/session_manager.py, bot/handlers/commands.py
-**Estado:** ⏳ Pendiente
+**Estado:** ✅ Completado (2026-05-15)
 
 ---
 
