@@ -234,6 +234,53 @@ bot/handlers/
 
 ---
 
+### 20. Comando /projects para listar todos los proyectos
+**Descripción:** Crear nuevo comando `/projects` (plural) que liste todos los proyectos del usuario. El comando `/project` (singular) actual se mantiene para mostrar el proyecto activo.
+
+**Implementación:**
+- `/projects` → listar todos los paths únicos de la tabla sessions del usuario
+- Mostrar nombre del proyecto, path y última sesión asociada
+- Mantener `/project` como está (muestra proyecto actual)
+
+**Archivos:** bot/handlers/commands.py - añadir projects_command()
+
+**Estado:** ⏳ Pendiente
+
+---
+
+### 21. Limpieza de BD y scripts obsoletos
+**Descripción:** Tras la simplificación de la BD hay archivos que ya no valen:
+- `bot/botclaw.db` → archivo vacío (0 bytes), eliminar
+- `data/bot.db` → renombrar a `data/botclaw.db` (nombre más claro)
+- `scripts/migrate_db.py` → migración antigua, eliminar
+- `scripts/migrate_to_new_schema.py` → migración antigua, eliminar
+- Actualizar `DATABASE_PATH` en `settings.py` a `data/botclaw.db`
+
+**Archivos:** bot/botclaw.db (eliminar), data/bot.db → data/botclaw.db (renombrar), scripts/ (limpiar), bot/config/settings.py
+
+**Estado:** ⏳ Pendiente
+
+---
+
+### 22. Voz TTS configurable por variable de entorno
+**Descripción:** La voz del TTS (`es-MX-DaliaNeural`) está hardcodeada. Hacerla configurable mediante variable de entorno `TTS_VOICE` para poder cambiarla fácilmente sin modificar código.
+
+**Implementación:**
+- Añadir `TTS_VOICE` a `settings.py` con valor por defecto `es-MX-DaliaNeural`
+- Actualizar `bot/services/tts.py` para usar la variable de entorno
+- Documentar en README.md y SPEC.md
+
+**Archivos:** bot/config/settings.py, bot/services/tts.py, README.md, SPEC.md, config/.env.example
+
+**Estado:** ✅ Completado (2026-05-15)
+
+- Puerto de OpenCode: **4097** (no 4096)
+- TTS fix: usar `text.strip()` + voz `es-MX-DaliaNeural`
+- Arquitectura: Bot = puente, LLM tiene contexto de sesión
+- Al hacer /init → cargar sesión más reciente del proyecto (no crear nueva)
+
+---
+
 ## Notas Técnicas
 
 - Puerto de OpenCode: **4097** (no 4096)

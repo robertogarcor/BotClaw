@@ -5,7 +5,7 @@ from telegram import Update
 from telegram.ext import ContextTypes
 
 from bot.config.settings import Settings
-from bot.services.audio_utils import download_voice, cleanup_temp_files
+from bot.services.audio_utils import download_voice, download_audio, cleanup_temp_files
 from bot.services.stt import transcribe_local
 from bot.handlers import messages
 

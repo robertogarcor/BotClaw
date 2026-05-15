@@ -3,12 +3,14 @@ import os
 import logging
 from pathlib import Path
 
+from bot.config.settings import Settings
+
 logger = logging.getLogger(__name__)
 
 
 class TTSService:
-    def __init__(self, voice: str = "es-ES-ElenaNeural"):
-        self.voice = voice
+    def __init__(self, voice: str = None):
+        self.voice = voice or Settings.TTS_VOICE
 
     async def synthesize(self, text: str, output_path: str) -> str:
         try:
@@ -54,7 +56,7 @@ class TTSService:
         return ""
 
 
-tts_service = TTSService(voice="es-MX-DaliaNeural")
+tts_service = TTSService()
 
 
 async def synthesize(text: str, output_path: str) -> str:
