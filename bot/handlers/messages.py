@@ -74,6 +74,8 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE, tex
         else:
             await update.message.reply_text("✅ Done (no output)")
 
+        session_manager.sync_session_dates_from_api(chat_id, current_path)
+
     except Exception as e:
         logger.error(f"Error sending prompt: {e}")
         await update.message.reply_text(f"❌ Error: {str(e)}")
@@ -112,6 +114,8 @@ async def handle_control_response(update: Update, context: ContextTypes.DEFAULT_
             await send_response_with_voice(update, context, response.content, voice_mode)
         else:
             await update.message.reply_text("✅ Done (no output)")
+
+        session_manager.sync_session_dates_from_api(chat_id, session.path)
 
     except Exception as e:
         logger.error(f"Error in control response: {e}")

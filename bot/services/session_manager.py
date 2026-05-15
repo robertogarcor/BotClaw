@@ -140,6 +140,26 @@ class SessionManager:
         conn.commit()
         conn.close()
 
+    def sync_session_dates_from_api(self, chat_id: int, path: str) -> None:
+        session = self.get_session(chat_id, path)
+        if not session or not session.session_id:
+            return
+        
+        server = self._get_server()
+        try:
+            session_details = server.get_session_details(session.session_id)
+            if session_details:
+                time_data = session_details.get("time", {})
+                created_time = time_data.get("created", 0)
+                updated_time = time_data.get("updated", 0)
+                
+                if created_time:
+                    created_at = datetime.fromtimestamp(created_time / 1000).strftime("%Y-%m-%d %H:%M:%S")
+                    updated_at = datetime.fromtimestamp(updated_time / 1000).strftime("%Y-%m-%d %H:%M:%S") if updated_time else created_at
+                    self.save_session(chat_id, path, session.session_id, created_at, updated_at)
+        except Exception as e:
+            logger.error(f"Error syncing session dates: {type(e).__name__}: {e}")
+
     def init_project(self, chat_id: int, path: str) -> tuple[str, bool, dict]:
         path = path.rstrip("/")
         server = self._get_server()

@@ -447,6 +447,8 @@ async def sessions_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -
         session_manager = SessionManager()
         sessions = session_manager.get_sessions_from_api(full_path)
 
+        session_manager.sync_session_dates_from_api(chat_id, full_path)
+
         if not sessions:
             await update.message.reply_text(
                 f"No sessions found for:\n{full_path}\n\n"

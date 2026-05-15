@@ -168,6 +168,34 @@
 
 ---
 
+### 15. Sincronizar fechas de BD local con API tras cada interacción
+**Descripción:** La BD local se desactualiza respecto a la API porque cada interacción con el agente actualiza `updated_at` en la API pero no en la BD. `/status` lee de BD y muestra fechas viejas.
+
+**Implementación:**
+- Añadir `sync_session_dates_from_api()` en `session_manager.py` que consulta `get_session_details()` y actualiza BD
+- Llamar a `sync_session_dates_from_api()` tras `send_prompt()` y `send_control_response()` en `messages.py`
+- Llamar a `sync_session_dates_from_api()` en `sessions_command()` al listar sesiones
+
+**Archivos:** bot/services/session_manager.py, bot/handlers/messages.py, bot/handlers/commands.py
+
+**Estado:** ✅ Completado (2026-05-15)
+
+---
+
+### 16. /sessions sin path usa proyecto actual
+**Descripción:** Actualmente `/sessions` requiere siempre un path. Añadir opción de usar `/sessions` sin argumentos para listar sesiones del proyecto activo (el del último `/init`).
+
+**Implementación:**
+- Si `/sessions` tiene argumentos → usar path proporcionado (comportamiento actual)
+- Si `/sessions` sin argumentos → usar `session_manager.get_current_path(chat_id)`
+- Si no hay path configurado → pedir que haga `/init` primero
+
+**Archivos:** bot/handlers/commands.py - sessions_command()
+
+**Estado:** ⏳ Pendiente
+
+---
+
 ## Notas Técnicas
 
 - Puerto de OpenCode: **4097** (no 4096)
