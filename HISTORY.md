@@ -192,6 +192,44 @@
 
 **Archivos:** bot/handlers/commands.py - sessions_command()
 
+**Estado:** ✅ Completado (2026-05-15)
+
+---
+
+### 17. Separar commands.py en módulos por secciones
+**Descripción:** commands.py tiene +730 líneas con todos los handlers en un solo fichero. Separar en módulos más pequeños por tipo de funcionalidad para mejorar mantenibilidad.
+
+**Estructura propuesta:**
+```
+bot/handlers/
+├── __init__.py
+├── base.py          ← start, help, cancel
+├── project.py       ← init, project, clone
+├── sessions.py      ← sessions, use, last, new
+├── info.py          ← status, mcp, skills
+└── voice.py         ← voice_command
+```
+
+**Archivos:** bot/handlers/commands.py → múltiples ficheros
+
+**Estado:** ⏳ Pendiente
+
+---
+
+### 18. Fix: /last muestra session ID completo
+**Descripción:** `/last` truncaba el session ID a 20 caracteres (`[:20]`). Mostrar ID completo con formato code para que sea seleccionable y copiable.
+
+**Archivos:** bot/handlers/commands.py - last_command()
+
+**Estado:** ✅ Completado (2026-05-15)
+
+---
+
+### 19. Revisar comando /clone
+**Descripción:** Revisar el comando `/clone` para soportar clonar repositorios locales y remotos. Actualmente solo soporta URLs remotas de git. Eliminar uso de `set_working_dir` que ya no existe.
+
+**Archivos:** bot/handlers/commands.py - clone_command()
+
 **Estado:** ⏳ Pendiente
 
 ---

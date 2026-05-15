@@ -42,7 +42,8 @@ async def help_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> No
         
         "💬 *Sessions*\n"
         "/new - Start new session\n"
-        "/sessions - List TUI sessions\n"
+        "/sessions - List sessions of current project\n"
+        "/sessions <path> - List sessions of a specific project\n"
         "/use <id> - Select a session\n"
         "/last - Use last session\n\n"
         
@@ -345,7 +346,6 @@ async def init_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> No
 
 
 async def clone_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
-    from bot.services.user_manager import UserManager
     from bot.services.session_manager import SessionManager
 
     chat_id = update.effective_chat.id
@@ -356,10 +356,10 @@ async def clone_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> N
         return
 
     repo_url = args[0]
-    user_manager = UserManager()
-    user = user_manager.get_user(chat_id)
+    session_manager = SessionManager()
 
-    base_dir = user.working_dir if user and user.working_dir else str(Path.home() / "projects")
+    current_path = session_manager.get_current_path(chat_id)
+    base_dir = str(Path(current_path).parent) if current_path else str(Path.home() / "projects")
     Path(base_dir).mkdir(parents=True, exist_ok=True)
 
     repo_name = repo_url.rstrip("/").split("/")[-1].replace(".git", "")
@@ -378,12 +378,7 @@ async def clone_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> N
             capture_output=True
         )
 
-        user_manager.set_working_dir(chat_id, str(target_dir))
-
-        session_manager = SessionManager()
-        session_manager.set_working_dir(chat_id, str(target_dir))
-
-        await update.message.reply_text(f"✅ Cloned to:\n`{target_dir}`", parse_mode="Markdown")
+        await update.message.reply_text(f"✅ Cloned to:\n`{target_dir}`\n\nUse /init {target_dir} to start working with it.", parse_mode="Markdown")
 
     except subprocess.CalledProcessError as e:
         await update.message.reply_text(f"❌ Git error: {e.stderr.decode() if e.stderr else 'Unknown error'}")
@@ -393,16 +388,12 @@ async def clone_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> N
 
 async def new_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     from bot.services.session_manager import SessionManager
-    from bot.services.user_manager import UserManager
 
     chat_id = update.effective_chat.id
     session_manager = SessionManager()
-    user_manager = UserManager()
 
     try:
-        user = user_manager.get_user(chat_id)
-        working_dir = user.working_dir if user and user.working_dir else ""
-
+        working_dir = session_manager.get_current_path(chat_id)
         if not working_dir:
             await update.message.reply_text("Set your project first with /init <path>")
             return
@@ -434,17 +425,20 @@ async def sessions_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -
     chat_id = update.effective_chat.id
     args = context.args
 
+    session_manager = SessionManager()
+
     if args:
         path = " ".join(args)
         full_path = str(Path(path).expanduser().resolve())
     else:
-        await update.message.reply_text("Usage: /sessions <path>\nExample: /sessions /home/user/myproject")
-        return
+        full_path = session_manager.get_current_path(chat_id)
+        if not full_path:
+            await update.message.reply_text("No project set. Use /init <path> first or specify a path: /sessions <path>")
+            return
 
     logger.info(f"Listing sessions for: {full_path}")
 
     try:
-        session_manager = SessionManager()
         sessions = session_manager.get_sessions_from_api(full_path)
 
         session_manager.sync_session_dates_from_api(chat_id, full_path)
@@ -600,12 +594,10 @@ async def use_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> Non
             return
 
         session_id = session_details.get("id", session_id_prefix)
-        session_manager = SessionManager()
-        session_manager.set_session_id(chat_id, session_id)
-
         directory = session_details.get("directory", "")
+        session_manager = SessionManager()
         if directory:
-            session_manager.set_working_dir(chat_id, directory)
+            session_manager.set_session_id(chat_id, directory, session_id)
 
         title = session_details.get("title", "Unknown")
         title_escaped = title.replace("_", r"\_").replace("*", r"\*").replace("`", r"\`")
@@ -617,35 +609,30 @@ async def use_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> Non
 
 async def last_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     from bot.services.session_manager import SessionManager
-    from bot.services.user_manager import UserManager
 
     chat_id = update.effective_chat.id
     session_manager = SessionManager()
-    user_manager = UserManager()
 
     try:
-        user = user_manager.get_user(chat_id)
-
-        saved_session = session_manager.get_session(chat_id)
-        if saved_session.session_id:
+        saved_session = session_manager.get_current_session(chat_id)
+        if saved_session and saved_session.session_id:
             server = ServerFactory.create_opencode(
                 url=Settings.OPENCODE_SERVER_URL,
                 password=Settings.OPENCODE_SERVER_PASSWORD
             )
             if server.continue_session(saved_session.session_id):
-                session_manager.set_session_id(chat_id, saved_session.session_id)
-                if saved_session.working_dir:
-                    session_manager.set_working_dir(chat_id, saved_session.working_dir)
+                session_manager.set_session_id(chat_id, saved_session.path, saved_session.session_id)
                 await update.message.reply_text(
-                    f"✅ Using saved session:\nID: {saved_session.session_id[:20]}\nDir: {saved_session.working_dir}"
+                    f"✅ Using saved session:\nID: `{saved_session.session_id}`\nDir: `{saved_session.path}`"
                 )
                 return
 
-        if not user or not user.working_dir:
+        user_dir = session_manager.get_current_path(chat_id)
+        if not user_dir:
             await update.message.reply_text("Use /init to set your project directory first.")
             return
 
-        user_dir = user.working_dir.rstrip("/")
+        user_dir = user_dir.rstrip("/")
 
         server = ServerFactory.create_opencode(
             url=Settings.OPENCODE_SERVER_URL,
@@ -667,7 +654,7 @@ async def last_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> No
 
         if not tui_sessions and not matching_sessions:
             await update.message.reply_text(
-                f"No sessions found for:\n{user.working_dir}\n\n"
+                f"No sessions found for:\n{user_dir}\n\n"
                 "Use /new to create a new session."
             )
             return
@@ -682,10 +669,9 @@ async def last_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> No
         title_escaped = title.replace("_", r"\_").replace("*", r"\*").replace("`", r"\`")
 
         session_manager = SessionManager()
-        session_manager.set_session_id(chat_id, session_id)
-        session_manager.set_working_dir(chat_id, user.working_dir)
+        session_manager.set_session_id(chat_id, user_dir, session_id)
 
-        await update.message.reply_text(f"✅ Connected to latest session:\nTitle: {title_escaped}\nDir: `{user.working_dir}`", parse_mode="Markdown")
+        await update.message.reply_text(f"✅ Connected to latest session:\nTitle: {title_escaped}\nDir: `{user_dir}`", parse_mode="Markdown")
     except Exception as e:
         logger.error(f"{type(e).__name__}: {e}")
         await update.message.reply_text(f"❌ Error: {str(e)}")
