@@ -258,7 +258,7 @@ bot/handlers/
 
 **Archivos:** bot/botclaw.db (eliminar), data/bot.db → data/botclaw.db (renombrar), scripts/ (limpiar), bot/config/settings.py
 
-**Estado:** ⏳ Pendiente
+**Estado:** ✅ Completado (2026-05-15)
 
 ---
 

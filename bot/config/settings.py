@@ -18,7 +18,7 @@ class Settings:
     TTS_VOICE = os.getenv("TTS_VOICE", "es-MX-DaliaNeural")
 
     DATA_DIR = BASE_DIR / "data"
-    DATABASE_PATH = DATA_DIR / "bot.db"
+    DATABASE_PATH = DATA_DIR / "botclaw.db"
 
     @classmethod
     def validate(cls) -> bool:
