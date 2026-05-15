@@ -143,9 +143,26 @@
 ### 13. Manejo de excepciones en await (API, BD)
 **Descripción:** Todas las llamadas await a API, BD y operaciones externas deben tener try/except para capturar errores. Evita errores silenciosos y crashes del bot.
 
-**Archivos a revisar:** commands.py, messages.py, session_manager.py, user_manager.py
+**Implementación:**
+- `commands.py`: Añadido try/except a new_command, use_command, last_command, mcp_command, sessions_command, init_command
+- `session_manager.py`: Añadido try/except a init_project() (POST a API)
+- `user_manager.py`: Añadido try/except a get_user, create_user, set_voice_mode (operaciones BD)
+- Todos los except loguean `type(e).__name__: e` y notifican al usuario
 
-**Estado:** ⏳ Pendiente
+**Archivos modificados:** commands.py, session_manager.py, user_manager.py
+
+**Estado:** ✅ Completado (2026-05-15)
+
+---
+
+### 14. Fix: Escape de caracteres Markdown en títulos de sesión
+**Descripción:** Error "Can't parse entities: can't find end of the entity" al usar /sessions o /init con rutas que contienen underscores (`_`). Los títulos de sesión como "BotClaw session for /home/administrador/Projects/BotClaw" contienen `_` que Telegram interpreta como inicio de cursiva en Markdown.
+
+**Implementación:** Escapar caracteres `_`, `*`, `` ` ``, `[`, `]`, `(`, `)` en todos los títulos antes de enviar a Telegram.
+
+**Archivos modificados:** bot/handlers/commands.py - sessions_command, status_command, use_command, last_command
+
+**Estado:** ✅ Completado (2026-05-15)
 
 ---
 

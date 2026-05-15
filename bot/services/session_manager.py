@@ -1,3 +1,4 @@
+import logging
 import sqlite3
 from pathlib import Path
 from typing import Optional, List
@@ -6,6 +7,8 @@ from datetime import datetime
 from bot.config.settings import Settings
 from bot.models.session import Session
 from bot.servers.base import BaseServer
+
+logger = logging.getLogger(__name__)
 
 
 class SessionManager:
@@ -162,11 +165,15 @@ class SessionManager:
             self.save_session(chat_id, path, session_id, created_at, updated_at)
             return session_id, False, session_data
         
-        response = server._session.post(
-            f"{server.url}/session",
-            json={"title": f"BotClaw session for {path}"},
-            timeout=30
-        )
+        try:
+            response = server._session.post(
+                f"{server.url}/session",
+                json={"title": f"BotClaw session for {path}"},
+                timeout=30
+            )
+        except Exception as e:
+            logger.error(f"Error creating session: {type(e).__name__}: {e}")
+            return "", True, {}
         
         if response.status_code == 200 or response.status_code == 201:
             data = response.json()

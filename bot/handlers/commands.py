@@ -1,10 +1,13 @@
 import subprocess
+import logging
 from pathlib import Path
 from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import ContextTypes
 
 from bot.config.settings import Settings
 from bot.servers.factory import ServerFactory
+
+logger = logging.getLogger(__name__)
 
 
 async def start_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
@@ -100,7 +103,8 @@ async def status_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> 
             if session_details:
                 title = session_details.get("title", "")
                 if title:
-                    status_text += f"Title: {title}\n"
+                    title_escaped = title.replace("_", r"\_").replace("*", r"\*").replace("`", r"\`")
+                    status_text += f"Title: {title_escaped}\n"
         except Exception:
             pass
         
@@ -220,15 +224,18 @@ async def init_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> No
         await update.message.reply_text(f"❌ Path does not exist: {full_path}")
         return
 
-    import logging
-    logger = logging.getLogger(__name__)
-
     session_manager = SessionManager()
     user_manager = UserManager()
-    user_manager.get_or_create_user(chat_id, update.effective_user.username or str(chat_id))
 
-    logger.info(f"Initializing project: {full_path}")
-    session_id, is_new, session_data = session_manager.init_project(chat_id, full_path)
+    try:
+        user_manager.get_or_create_user(chat_id, update.effective_user.username or str(chat_id))
+
+        logger.info(f"Initializing project: {full_path}")
+        session_id, is_new, session_data = session_manager.init_project(chat_id, full_path)
+    except Exception as e:
+        logger.error(f"{type(e).__name__}: {e}")
+        await update.message.reply_text(f"❌ Error initializing project: {str(e)}")
+        return
     
     title = session_data.get("title", "") if session_data else ""
     time_data = session_data.get("time", {}) if session_data else {}
@@ -392,25 +399,29 @@ async def new_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> Non
     session_manager = SessionManager()
     user_manager = UserManager()
 
-    user = user_manager.get_user(chat_id)
-    working_dir = user.working_dir if user and user.working_dir else ""
+    try:
+        user = user_manager.get_user(chat_id)
+        working_dir = user.working_dir if user and user.working_dir else ""
 
-    if not working_dir:
-        await update.message.reply_text("Set your project first with /init <path>")
-        return
+        if not working_dir:
+            await update.message.reply_text("Set your project first with /init <path>")
+            return
 
-    server = ServerFactory.create_opencode(
-        url=Settings.OPENCODE_SERVER_URL,
-        password=Settings.OPENCODE_SERVER_PASSWORD
-    )
+        server = ServerFactory.create_opencode(
+            url=Settings.OPENCODE_SERVER_URL,
+            password=Settings.OPENCODE_SERVER_PASSWORD
+        )
 
-    session_manager.set_server(server)
-    new_session_id = session_manager.create_session_with_dir(chat_id, working_dir)
+        session_manager.set_server(server)
+        new_session_id = session_manager.create_session_with_dir(chat_id, working_dir)
 
-    if new_session_id:
-        await update.message.reply_text(f"✅ New session created for:\n`{working_dir}`", parse_mode="Markdown")
-    else:
-        await update.message.reply_text("❌ Failed to create new session")
+        if new_session_id:
+            await update.message.reply_text(f"✅ New session created for:\n`{working_dir}`", parse_mode="Markdown")
+        else:
+            await update.message.reply_text("❌ Failed to create new session")
+    except Exception as e:
+        logger.error(f"{type(e).__name__}: {e}")
+        await update.message.reply_text(f"❌ Error: {str(e)}")
 
 
 async def cancel_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
@@ -419,8 +430,6 @@ async def cancel_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> 
 
 async def sessions_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     from bot.services.session_manager import SessionManager
-    import logging
-    logger = logging.getLogger(__name__)
 
     chat_id = update.effective_chat.id
     args = context.args
@@ -434,64 +443,73 @@ async def sessions_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -
 
     logger.info(f"Listing sessions for: {full_path}")
 
-    session_manager = SessionManager()
-    sessions = session_manager.get_sessions_from_api(full_path)
+    try:
+        session_manager = SessionManager()
+        sessions = session_manager.get_sessions_from_api(full_path)
 
-    if not sessions:
-        await update.message.reply_text(
-            f"No sessions found for:\n{full_path}\n\n"
-            "Use /init to initialize the project."
-        )
-        return
+        if not sessions:
+            await update.message.reply_text(
+                f"No sessions found for:\n{full_path}\n\n"
+                "Use /init to initialize the project."
+            )
+            return
 
-    response_text = f"📋 *Sessions for* `{full_path}`\n\n"
+        response_text = f"📋 *Sessions for* `{full_path}`\n\n"
 
-    for session in sessions[:10]:
-        session_id = session.get("id", "")
-        title = session.get("title", "")
-        time_data = session.get("time", {})
-        created = time_data.get("created", 0)
-        updated = time_data.get("updated", 0)
-        
-        from datetime import datetime
-        if created:
-            created_str = datetime.fromtimestamp(created / 1000).strftime("%d-%m-%Y %H:%M")
-        else:
-            created_str = "unknown"
-        
-        if updated:
-            last_access_str = datetime.fromtimestamp(updated / 1000).strftime("%d-%m-%Y %H:%M")
-        else:
-            last_access_str = "unknown"
+        for session in sessions[:10]:
+            session_id = session.get("id", "")
+            title = session.get("title", "")
+            time_data = session.get("time", {})
+            created = time_data.get("created", 0)
+            updated = time_data.get("updated", 0)
+            
+            from datetime import datetime
+            if created:
+                created_str = datetime.fromtimestamp(created / 1000).strftime("%d-%m-%Y %H:%M")
+            else:
+                created_str = "unknown"
+            
+            if updated:
+                last_access_str = datetime.fromtimestamp(updated / 1000).strftime("%d-%m-%Y %H:%M")
+            else:
+                last_access_str = "unknown"
 
-        response_text += f"• Session: `{session_id}`\n"
-        response_text += f"  Title: {title or 'Untitled'}\n"
-        response_text += f"  Created: {created_str}\n"
-        response_text += f"  Last access: {last_access_str}\n"
+            response_text += f"• Session: `{session_id}`\n"
+            title_escaped = title.replace("_", r"\_").replace("*", r"\*").replace("`", r"\`").replace("[", r"\[").replace("]", r"\]").replace("(", r"\(").replace(")", r"\)")
+            response_text += f"  Title: {title_escaped or 'Untitled'}\n"
+            response_text += f"  Created: {created_str}\n"
+            response_text += f"  Last access: {last_access_str}\n"
 
-    await update.message.reply_text(response_text, parse_mode="Markdown")
+        await update.message.reply_text(response_text, parse_mode="Markdown")
+    except Exception as e:
+        logger.error(f"{type(e).__name__}: {e}")
+        await update.message.reply_text(f"❌ Error: {str(e)}")
 
 
 async def mcp_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
-    server = ServerFactory.create_opencode(
-        url=Settings.OPENCODE_SERVER_URL,
-        password=Settings.OPENCODE_SERVER_PASSWORD
-    )
+    try:
+        server = ServerFactory.create_opencode(
+            url=Settings.OPENCODE_SERVER_URL,
+            password=Settings.OPENCODE_SERVER_PASSWORD
+        )
 
-    mcp_servers = server.list_mcp_servers()
+        mcp_servers = server.list_mcp_servers()
 
-    if not mcp_servers:
-        await update.message.reply_text("🔌 *MCP Servers:*\n\nNo MCP servers connected.")
-        return
+        if not mcp_servers:
+            await update.message.reply_text("🔌 *MCP Servers:*\n\nNo MCP servers connected.")
+            return
 
-    response_text = "🔌 *MCP Servers:*\n\n"
-    for name, status in mcp_servers.items():
-        status_emoji = "✅" if status.get("connected") else "❌"
-        response_text += f"{status_emoji} *{name}*\n"
-        if status.get("status"):
-            response_text += f"   Status: {status.get('status')}\n"
+        response_text = "🔌 *MCP Servers:*\n\n"
+        for name, status in mcp_servers.items():
+            status_emoji = "✅" if status.get("connected") else "❌"
+            response_text += f"{status_emoji} *{name}*\n"
+            if status.get("status"):
+                response_text += f"   Status: {status.get('status')}\n"
 
-    await update.message.reply_text(response_text[:4096], parse_mode="Markdown")
+        await update.message.reply_text(response_text[:4096], parse_mode="Markdown")
+    except Exception as e:
+        logger.error(f"{type(e).__name__}: {e}")
+        await update.message.reply_text(f"❌ Error: {str(e)}")
 
 
 async def skills_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
@@ -544,8 +562,6 @@ async def skills_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> 
 
 async def use_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     from bot.services.session_manager import SessionManager
-    import logging
-    logger = logging.getLogger(__name__)
 
     chat_id = update.effective_chat.id
     args = context.args
@@ -560,36 +576,41 @@ async def use_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> Non
     session_id_prefix = args[0].strip()
     logger.info(f"use_command: trying session_id={session_id_prefix}")
 
-    server = ServerFactory.create_opencode(
-        url=Settings.OPENCODE_SERVER_URL,
-        password=Settings.OPENCODE_SERVER_PASSWORD
-    )
+    try:
+        server = ServerFactory.create_opencode(
+            url=Settings.OPENCODE_SERVER_URL,
+            password=Settings.OPENCODE_SERVER_PASSWORD
+        )
 
-    session_details = server.get_session_details(session_id_prefix)
+        session_details = server.get_session_details(session_id_prefix)
 
-    if not session_details:
-        sessions = server.list_sessions()
-        for session in sessions:
-            if session.get("id", "").startswith(session_id_prefix):
-                session_id = session.get("id", "")
-                session_details = server.get_session_details(session_id)
-                logger.info(f"use_command: found by prefix: {session_id}")
-                break
+        if not session_details:
+            sessions = server.list_sessions()
+            for session in sessions:
+                if session.get("id", "").startswith(session_id_prefix):
+                    session_id = session.get("id", "")
+                    session_details = server.get_session_details(session_id)
+                    logger.info(f"use_command: found by prefix: {session_id}")
+                    break
 
-    if not session_details:
-        await update.message.reply_text("❌ Session not found.")
-        return
+        if not session_details:
+            await update.message.reply_text("❌ Session not found.")
+            return
 
-    session_id = session_details.get("id", session_id_prefix)
-    session_manager = SessionManager()
-    session_manager.set_session_id(chat_id, session_id)
+        session_id = session_details.get("id", session_id_prefix)
+        session_manager = SessionManager()
+        session_manager.set_session_id(chat_id, session_id)
 
-    directory = session_details.get("directory", "")
-    if directory:
-        session_manager.set_working_dir(chat_id, directory)
+        directory = session_details.get("directory", "")
+        if directory:
+            session_manager.set_working_dir(chat_id, directory)
 
-    title = session_details.get("title", "Unknown")
-    await update.message.reply_text(f"✅ Now using session:\nTitle: {title}\nDir: {directory}")
+        title = session_details.get("title", "Unknown")
+        title_escaped = title.replace("_", r"\_").replace("*", r"\*").replace("`", r"\`")
+        await update.message.reply_text(f"✅ Now using session:\nTitle: {title_escaped}\nDir: `{directory}`", parse_mode="Markdown")
+    except Exception as e:
+        logger.error(f"{type(e).__name__}: {e}")
+        await update.message.reply_text(f"❌ Error: {str(e)}")
 
 
 async def last_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
@@ -599,67 +620,73 @@ async def last_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> No
     chat_id = update.effective_chat.id
     session_manager = SessionManager()
     user_manager = UserManager()
-    user = user_manager.get_user(chat_id)
 
-    saved_session = session_manager.get_session(chat_id)
-    if saved_session.session_id:
+    try:
+        user = user_manager.get_user(chat_id)
+
+        saved_session = session_manager.get_session(chat_id)
+        if saved_session.session_id:
+            server = ServerFactory.create_opencode(
+                url=Settings.OPENCODE_SERVER_URL,
+                password=Settings.OPENCODE_SERVER_PASSWORD
+            )
+            if server.continue_session(saved_session.session_id):
+                session_manager.set_session_id(chat_id, saved_session.session_id)
+                if saved_session.working_dir:
+                    session_manager.set_working_dir(chat_id, saved_session.working_dir)
+                await update.message.reply_text(
+                    f"✅ Using saved session:\nID: {saved_session.session_id[:20]}\nDir: {saved_session.working_dir}"
+                )
+                return
+
+        if not user or not user.working_dir:
+            await update.message.reply_text("Use /init to set your project directory first.")
+            return
+
+        user_dir = user.working_dir.rstrip("/")
+
         server = ServerFactory.create_opencode(
             url=Settings.OPENCODE_SERVER_URL,
             password=Settings.OPENCODE_SERVER_PASSWORD
         )
-        if server.continue_session(saved_session.session_id):
-            session_manager.set_session_id(chat_id, saved_session.session_id)
-            if saved_session.working_dir:
-                session_manager.set_working_dir(chat_id, saved_session.working_dir)
+
+        sessions = server.list_sessions()
+
+        matching_sessions = []
+        tui_sessions = []
+        for session in sessions:
+            directory = session.get("directory", "").rstrip("/")
+            title = session.get("title", "")
+            if directory.startswith(user_dir) or user_dir.startswith(directory):
+                if title and not title.startswith("BotClaw session for"):
+                    tui_sessions.append(session)
+                else:
+                    matching_sessions.append(session)
+
+        if not tui_sessions and not matching_sessions:
             await update.message.reply_text(
-                f"✅ Using saved session:\nID: {saved_session.session_id[:20]}\nDir: {saved_session.working_dir}"
+                f"No sessions found for:\n{user.working_dir}\n\n"
+                "Use /new to create a new session."
             )
             return
 
-    if not user or not user.working_dir:
-        await update.message.reply_text("Use /init to set your project directory first.")
-        return
+        if tui_sessions:
+            latest_session = tui_sessions[0]
+        else:
+            latest_session = matching_sessions[0]
 
-    user_dir = user.working_dir.rstrip("/")
+        session_id = latest_session.get("id", "")
+        title = latest_session.get("title", "Untitled")
+        title_escaped = title.replace("_", r"\_").replace("*", r"\*").replace("`", r"\`")
 
-    server = ServerFactory.create_opencode(
-        url=Settings.OPENCODE_SERVER_URL,
-        password=Settings.OPENCODE_SERVER_PASSWORD
-    )
+        session_manager = SessionManager()
+        session_manager.set_session_id(chat_id, session_id)
+        session_manager.set_working_dir(chat_id, user.working_dir)
 
-    sessions = server.list_sessions()
-
-    matching_sessions = []
-    tui_sessions = []
-    for session in sessions:
-        directory = session.get("directory", "").rstrip("/")
-        title = session.get("title", "")
-        if directory.startswith(user_dir) or user_dir.startswith(directory):
-            if title and not title.startswith("BotClaw session for"):
-                tui_sessions.append(session)
-            else:
-                matching_sessions.append(session)
-
-    if not tui_sessions and not matching_sessions:
-        await update.message.reply_text(
-            f"No sessions found for:\n{user.working_dir}\n\n"
-            "Use /new to create a new session."
-        )
-        return
-
-    if tui_sessions:
-        latest_session = tui_sessions[0]
-    else:
-        latest_session = matching_sessions[0]
-
-    session_id = latest_session.get("id", "")
-    title = latest_session.get("title", "Untitled")
-
-    session_manager = SessionManager()
-    session_manager.set_session_id(chat_id, session_id)
-    session_manager.set_working_dir(chat_id, user.working_dir)
-
-    await update.message.reply_text(f"✅ Connected to latest session:\nTitle: {title}\nDir: {user.working_dir}")
+        await update.message.reply_text(f"✅ Connected to latest session:\nTitle: {title_escaped}\nDir: `{user.working_dir}`", parse_mode="Markdown")
+    except Exception as e:
+        logger.error(f"{type(e).__name__}: {e}")
+        await update.message.reply_text(f"❌ Error: {str(e)}")
 
 
 async def voice_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:

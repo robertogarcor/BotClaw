@@ -1,8 +1,11 @@
+import logging
 import sqlite3
 from pathlib import Path
 
 from bot.config.settings import Settings
 from bot.models.user import User
+
+logger = logging.getLogger(__name__)
 
 
 class UserManager:
@@ -25,42 +28,61 @@ class UserManager:
         conn.close()
 
     def get_user(self, chat_id: int) -> User:
-        conn = sqlite3.connect(self.db_path)
-        conn.row_factory = sqlite3.Row
-        cursor = conn.execute(
-            "SELECT chat_id, username, voice_mode, created_at FROM users WHERE chat_id = ?",
-            (chat_id,)
-        )
-        row = cursor.fetchone()
-        conn.close()
-
-        if row:
-            return User(
-                chat_id=row["chat_id"],
-                username=row["username"] or "",
-                voice_mode=row["voice_mode"] or "off",
-                created_at=row["created_at"],
+        conn = None
+        try:
+            conn = sqlite3.connect(self.db_path)
+            conn.row_factory = sqlite3.Row
+            cursor = conn.execute(
+                "SELECT chat_id, username, voice_mode, created_at FROM users WHERE chat_id = ?",
+                (chat_id,)
             )
-        return None
+            row = cursor.fetchone()
+
+            if row:
+                return User(
+                    chat_id=row["chat_id"],
+                    username=row["username"] or "",
+                    voice_mode=row["voice_mode"] or "off",
+                    created_at=row["created_at"],
+                )
+            return None
+        except sqlite3.Error as e:
+            logger.error(f"DB error in get_user: {type(e).__name__}: {e}")
+            return None
+        finally:
+            if conn:
+                conn.close()
 
     def create_user(self, chat_id: int, username: str) -> User:
-        conn = sqlite3.connect(self.db_path)
-        conn.execute(
-            "INSERT OR IGNORE INTO users (chat_id, username, voice_mode) VALUES (?, ?, 'off')",
-            (chat_id, username)
-        )
-        conn.commit()
-        conn.close()
+        conn = None
+        try:
+            conn = sqlite3.connect(self.db_path)
+            conn.execute(
+                "INSERT OR IGNORE INTO users (chat_id, username, voice_mode) VALUES (?, ?, 'off')",
+                (chat_id, username)
+            )
+            conn.commit()
+        except sqlite3.Error as e:
+            logger.error(f"DB error in create_user: {type(e).__name__}: {e}")
+        finally:
+            if conn:
+                conn.close()
         return self.get_user(chat_id)
 
     def set_voice_mode(self, chat_id: int, voice_mode: str) -> None:
-        conn = sqlite3.connect(self.db_path)
-        conn.execute(
-            "UPDATE users SET voice_mode = ? WHERE chat_id = ?",
-            (voice_mode, chat_id)
-        )
-        conn.commit()
-        conn.close()
+        conn = None
+        try:
+            conn = sqlite3.connect(self.db_path)
+            conn.execute(
+                "UPDATE users SET voice_mode = ? WHERE chat_id = ?",
+                (voice_mode, chat_id)
+            )
+            conn.commit()
+        except sqlite3.Error as e:
+            logger.error(f"DB error in set_voice_mode: {type(e).__name__}: {e}")
+        finally:
+            if conn:
+                conn.close()
 
     def get_or_create_user(self, chat_id: int, username: str) -> User:
         user = self.get_user(chat_id)
