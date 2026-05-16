@@ -315,6 +315,118 @@ bot/handlers/
 
 ---
 
+### 25. Fix: `init_project()` no pasa `directory` como query parameter
+**Descripción:** Al crear una nueva sesión en `init_project()`, el POST a `/session` no pasa el `directory` como query parameter. Esto hace que la sesión se cree sin directorio de trabajo asociado en OpenCode.
+
+**Implementación:**
+- En `session_manager.py:189`, cambiar el POST para incluir `params={"directory": path}`
+- El título debe ser: `<nombre_proyecto> - DD/MM/AAAA`
+
+**Archivos:** bot/services/session_manager.py - init_project()
+
+**Estado:** ✅ Completado (2026-05-16)
+
+---
+
+### 26. Fix: `create_session()` en opencode.py no pasa `directory`
+**Descripción:** El método `create_session()` en `OpenCodeServer` tiene el mismo problema: no pasa `directory` como query parameter al crear sesión.
+
+**Implementación:**
+- En `opencode.py:36`, agregar `params={"directory": working_dir}` al POST
+
+**Archivos:** bot/servers/opencode.py - create_session()
+
+**Estado:** ✅ Completado (2026-05-16)
+
+---
+
+### 27. Fix: Método `create_session_with_dir()` no existe
+**Descripción:** El comando `/new` en `command_sessions.py:214` llama a `session_manager.create_session_with_dir(chat_id, working_dir)` pero este método no existe en `SessionManager`. Esto hace que `/new` falle con AttributeError.
+
+**Implementación:**
+- Crear método `create_session_with_dir(chat_id, path)` en `session_manager.py`
+- Debe crear sesión con `directory` como query parameter
+- Debe guardar la sesión en la BD local
+- Debe devolver el `session_id`
+
+**Archivos:** bot/services/session_manager.py, bot/handlers/command_sessions.py
+
+**Estado:** ✅ Completado (2026-05-16)
+
+---
+
+### 28. Comando `/rename` para cambiar título de sesión
+**Descripción:** Crear comando `/rename <nuevo_titulo>` que permita cambiar el título de la sesión actual de OpenCode.
+
+**Implementación:**
+- Usar PATCH `/session/{session_id}` con body `{"title": "nuevo_titulo"}`
+- Validar que hay sesión activa
+- Enviar confirmación con nuevo título
+- Actualizar `/help` con el nuevo comando
+
+**Archivos:** bot/handlers/command_sessions.py, bot/servers/opencode.py, bot/handlers/command_base.py
+
+**Estado:** ⏳ Pendiente
+
+---
+
+### 29. Fix: `get_current_path()` no devuelve el proyecto activo correcto
+**Descripción:** `get_current_path()` usa `ORDER BY last_access DESC` para determinar el proyecto activo. Pero `last_access` se rellena con el `updated_at` de la API de OpenCode (puede ser antiguo), no con el momento real de la interacción del usuario. Esto hace que `/sessions` sin argumentos muestre sesiones del proyecto equivocado.
+
+**Ejemplo del bug:**
+1. `/init BotClaw` → last_access = 22:41 (reciente en API)
+2. `/init agent-kit` → last_access = 11:53 (antiguo en API)
+3. `/sessions` → muestra BotClaw porque tiene last_access más reciente
+
+**Implementación:**
+- Añadir columna `is_active INTEGER DEFAULT 0` a tabla `sessions`
+- Crear método `set_active_path(chat_id, path)` que:
+  - `UPDATE sessions SET is_active=0 WHERE chat_id=?`
+  - `UPDATE sessions SET is_active=1 WHERE chat_id=? AND path=?`
+- `get_current_path()` cambia a `SELECT path WHERE chat_id=? AND is_active=1`
+- `init_project()` llama a `set_active_path()` tras guardar sesión
+- Mantener `last_access` para mostrar fechas en `/status` (no eliminar)
+
+**Archivos:** bot/services/session_manager.py - `_init_db()`, `save_session()`, `get_current_path()`, nuevo `set_active_path()`, `init_project()`
+
+**Estado:** ⏳ Pendiente
+
+---
+
+### 30. Mejorar mensaje de `/init` indicando si se creó sesión nueva o existente
+**Descripción:** `/init` siempre muestra el mismo mensaje ("configurado") tanto si reutiliza una sesión existente como si crea una nueva. El usuario debe saber si se creó una sesión nueva o se reutilizó una existente.
+
+**Implementación:**
+- En `command_project.py`, `init_command()` ya recibe `is_new` de `init_project()`
+- Si `is_new=True` → añadir mensaje "🆕 Nueva sesión creada"
+- Si `is_new=False` → añadir mensaje "🔄 Sesión existente reutilizada"
+- Diferenciar visualmente ambos casos en el mensaje al usuario
+
+**Archivos:** bot/handlers/command_project.py - init_command()
+
+**Estado:** ⏳ Pendiente
+
+---
+
+### 31. Investigar por qué `/create` no registra proyecto en la tabla `project` de OpenCode
+**Descripción:** Al crear un proyecto nuevo con `/create`, la sesión se crea correctamente pero con `projectID="global"`. No aparece en `GET /project` ni en `/projects` del bot. OpenCode solo registra proyectos en la tabla `project` cuando se abren desde el TUI, no vía API.
+
+**Hallazgos actuales:**
+- BotClaw y agent-kit tienen `projectID` específico (se abrieron desde TUI)
+- testprueba tiene `projectID="global"` (solo creado vía API)
+- Tener `.git` no es suficiente, el TUI debe inicializarlo
+
+**Opciones a evaluar:**
+1. `/create` hace `git init` automáticamente al crear directorio
+2. `/projects` también incluye sesiones con `projectID="global"` que tengan directorio propio
+3. Investigar si la API tiene otro endpoint para registrar proyectos
+
+**Archivos:** bot/handlers/command_project.py, bot/handlers/command_info.py
+
+**Estado:** ⏳ Pendiente
+
+---
+
 ## Notas Técnicas
 
 - Puerto de OpenCode: **4097** (no 4096)
