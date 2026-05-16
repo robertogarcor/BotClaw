@@ -284,3 +284,53 @@ async def clone_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> N
         await update.message.reply_text(f"❌ Git error: {e.stderr.decode() if e.stderr else 'Unknown error'}")
     except FileNotFoundError:
         await update.message.reply_text("❌ Git is not installed on this server.")
+
+
+async def create_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    from bot.services.user_manager import UserManager
+    from bot.services.session_manager import SessionManager
+
+    chat_id = update.effective_chat.id
+    args = context.args
+
+    if not args:
+        await update.message.reply_text("Usage: /create <path>\nExample: /create /home/user/myproject")
+        return
+
+    path = " ".join(args)
+    full_path = str(Path(path).expanduser().resolve())
+
+    if Path(full_path).exists():
+        await update.message.reply_text(f"📁 Directory already exists: {full_path}\nUse /init {full_path} to use it.")
+        return
+
+    try:
+        Path(full_path).mkdir(parents=True, exist_ok=True)
+    except Exception as e:
+        await update.message.reply_text(f"❌ Failed to create directory: {str(e)}")
+        return
+
+    session_manager = SessionManager()
+    user_manager = UserManager()
+
+    try:
+        user_manager.get_or_create_user(chat_id, update.effective_user.username or str(chat_id))
+
+        logger.info(f"Creating project: {full_path}")
+        session_id, is_new, session_data = session_manager.init_project(chat_id, full_path)
+    except Exception as e:
+        logger.error(f"{type(e).__name__}: {e}")
+        await update.message.reply_text(f"❌ Error creating project: {str(e)}")
+        return
+
+    project_name = Path(full_path).name
+    msg = (
+        f"✅ *{project_name}* created and configured\n\n"
+        f"Dir: `{full_path}`\n"
+        f"Session: `{session_id}`\n\n"
+        f"*Listo para recibir mensajes.*"
+    )
+    try:
+        await update.message.reply_text(msg, parse_mode="Markdown")
+    except Exception as e:
+        logger.error(f"Error sending /create message: {type(e).__name__}: {e}")

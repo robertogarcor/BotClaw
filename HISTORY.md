@@ -293,9 +293,9 @@ bot/handlers/
 - Enviar mensaje de confirmación con path y session_id
 - Similar a `/init` pero crea el directorio si no existe
 
-**Archivos:** bot/handlers/commands.py - añadir create_command()
+**Archivos:** bot/handlers/command_project.py - create_command()
 
-**Estado:** ⏳ Pendiente
+**Estado:** ✅ Completado (2026-05-15)
 
 ---
 

@@ -37,6 +37,7 @@ def main():
     application.add_handler(CommandHandler("project", command_project.project_command))
     application.add_handler(CommandHandler("projects", command_project.projects_command))
     application.add_handler(CommandHandler("clone", command_project.clone_command))
+    application.add_handler(CommandHandler("create", command_project.create_command))
     application.add_handler(CommandHandler("new", command_sessions.new_command))
     application.add_handler(CommandHandler("cancel", command_base.cancel_command))
     application.add_handler(CommandHandler("sessions", command_sessions.sessions_command))

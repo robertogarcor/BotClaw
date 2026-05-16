@@ -155,6 +155,7 @@ LOG_LEVEL=INFO
 | /init | `<path>` | Establecer directorio de trabajo |
 | /project | - | Mostrar proyecto actual |
 | /projects | - | Listar todos los proyectos (desde API) |
+| /create | `<path>` | Crear nuevo directorio de proyecto |
 | /clone | `<url>` | Clonar repositorio git |
 | /new | - | Nueva sesión |
 | /sessions | `[path]` | Listar sesiones del proyecto actual o de una ruta específica |
