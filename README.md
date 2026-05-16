@@ -59,7 +59,7 @@ BotClaw permite a los usuarios interactuar con OpenCode desde Telegram como si l
 | /start | Registrarse y obtener mensaje de bienvenida |
 | /help | Mostrar ayuda |
 | /init <path> | Establecer tu directorio de trabajo |
-| /create <name\|path> | Crear nuevo directorio de proyecto |
+| /create <name o path> | Crear nuevo directorio de proyecto |
 | /clone <url> | Clonar un repositorio git |
 | /new | Iniciar una nueva sesión de OpenCode |
 | /project | Mostrar proyecto actual |
@@ -70,7 +70,8 @@ BotClaw permite a los usuarios interactuar con OpenCode desde Telegram como si l
 | /last | Usar última sesión |
 | /mcp | Mostrar servidores MCP disponibles |
 | /skills | Mostrar skills del proyecto |
-| /voice on/off | Activar/desactivar respuestas de voz |
+| /voice on/off/status | Activar/desactivar respuestas de voz |
+| /cancel | Cancelar operación actual |
 
 ## Configuración
 
