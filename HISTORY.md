@@ -293,6 +293,20 @@ bot/handlers/
 
 ---
 
+### 24. Fix: Eliminar comandos duplicados en /help
+**Descripción:** `/project` y `/status` aparecían duplicados en el mensaje de `/help` (en "Getting Started" y en sus secciones correspondientes). Reorganizar para que cada comando aparezca una sola vez en su sección lógica.
+
+**Implementación:**
+- Mover `/init` a "Getting Started"
+- Mover `/status` a "Utilities"
+- Quitar `/project` y `/status` de "Getting Started"
+
+**Archivos:** bot/handlers/command_base.py - help_command()
+
+**Estado:** ✅ Completado (2026-05-15)
+
+---
+
 ## Notas Técnicas
 
 - Puerto de OpenCode: **4097** (no 4096)

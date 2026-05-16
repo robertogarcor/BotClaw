@@ -29,11 +29,9 @@ async def help_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> No
         "🚀 *Getting Started*\n"
         "/start - Start the bot\n"
         "/help - Show this help\n"
-        "/status - Show current status\n"
-        "/project - Show current project\n\n"
+        "/init <path> - Set working directory\n\n"
         
         "📁 *Project*\n"
-        "/init <path> - Set working directory\n"
         "/project - Show current project info\n"
         "/projects - List all your projects\n"
         "/clone <url> - Clone git repository\n\n"
@@ -52,6 +50,7 @@ async def help_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> No
         "/voice status - Show voice mode\n\n"
         
         "🔧 *Utilities*\n"
+        "/status - Show current status\n"
         "/mcp - Show MCP servers\n"
         "/skills - Show project skills\n"
         "/cancel - Cancel current operation\n\n"
