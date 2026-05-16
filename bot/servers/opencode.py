@@ -1,6 +1,8 @@
 import json
 import logging
 import time
+from datetime import datetime
+from pathlib import Path
 from typing import Optional
 import requests
 
@@ -32,10 +34,15 @@ class OpenCodeServer(BaseServer):
     def create_session(self, working_dir: str) -> str:
         logger.info(f"Creating session with working_dir: {working_dir}")
 
+        project_name = Path(working_dir).name
+        today_str = datetime.now().strftime("%d/%m/%Y")
+        session_title = f"{project_name} - {today_str}"
+
         try:
             response = self._session.post(
                 f"{self.url}/session",
-                json={"title": f"BotClaw session for {working_dir}"},
+                params={"directory": working_dir},
+                json={"title": session_title},
                 timeout=30
             )
         except requests.RequestException as e:

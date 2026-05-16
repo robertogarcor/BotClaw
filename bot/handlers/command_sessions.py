@@ -214,7 +214,7 @@ async def new_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> Non
         new_session_id = session_manager.create_session_with_dir(chat_id, working_dir)
 
         if new_session_id:
-            await update.message.reply_text(f"✅ New session created for:\n`{working_dir}`", parse_mode="Markdown")
+            await update.message.reply_text(f"✅ New session created:\nSession: `{new_session_id}`\nDir: `{working_dir}`", parse_mode="Markdown")
         else:
             await update.message.reply_text("❌ Failed to create new session")
     except Exception as e:

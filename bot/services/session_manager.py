@@ -175,7 +175,6 @@ class SessionManager:
             updated_time = time_data.get("updated", 0)
             
             if created_time:
-                from datetime import datetime
                 created_at = datetime.fromtimestamp(created_time / 1000).strftime("%Y-%m-%d %H:%M:%S")
                 updated_at = datetime.fromtimestamp(updated_time / 1000).strftime("%Y-%m-%d %H:%M:%S") if updated_time else created_at
             else:
@@ -185,10 +184,15 @@ class SessionManager:
             self.save_session(chat_id, path, session_id, created_at, updated_at)
             return session_id, False, session_data
         
+        project_name = Path(path).name
+        today_str = datetime.now().strftime("%d/%m/%Y")
+        session_title = f"{project_name} - {today_str}"
+
         try:
             response = server._session.post(
                 f"{server.url}/session",
-                json={"title": f"BotClaw session for {path}"},
+                params={"directory": path},
+                json={"title": session_title},
                 timeout=30
             )
         except Exception as e:
@@ -209,6 +213,39 @@ class SessionManager:
             self.save_session(chat_id, path, session_id)
         
         return session_id, True, data
+
+    def create_session_with_dir(self, chat_id: int, path: str) -> str:
+        path = path.rstrip("/")
+        server = self._get_server()
+
+        project_name = Path(path).name
+        today_str = datetime.now().strftime("%d/%m/%Y")
+        session_title = f"{project_name} - {today_str}"
+
+        try:
+            response = server._session.post(
+                f"{server.url}/session",
+                params={"directory": path},
+                json={"title": session_title},
+                timeout=30
+            )
+        except Exception as e:
+            logger.error(f"Error creating session: {type(e).__name__}: {e}")
+            return ""
+
+        if response.status_code == 200 or response.status_code == 201:
+            data = response.json()
+            session_id = data.get("id", "")
+        elif response.status_code == 204:
+            session_id = "default"
+        else:
+            logger.error(f"Failed to create session: {response.status_code} - {response.text}")
+            session_id = ""
+
+        if session_id:
+            self.save_session(chat_id, path, session_id)
+
+        return session_id
 
     def get_or_create_session(self, chat_id: int, path: str) -> str:
         session = self.get_session(chat_id, path)
