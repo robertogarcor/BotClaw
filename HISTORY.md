@@ -197,22 +197,21 @@
 ---
 
 ### 17. Separar commands.py en módulos por secciones
-**Descripción:** commands.py tiene +730 líneas con todos los handlers en un solo fichero. Separar en módulos más pequeños por tipo de funcionalidad para mejorar mantenibilidad.
+**Descripción:** commands.py tiene +780 líneas con todos los handlers en un solo fichero. Separar en módulos más pequeños por tipo de funcionalidad para mejorar mantenibilidad.
 
 **Estructura propuesta:**
 ```
 bot/handlers/
-├── __init__.py
-├── base.py          ← start, help, cancel
-├── project.py       ← init, project, clone
-├── sessions.py      ← sessions, use, last, new
-├── info.py          ← status, mcp, skills
-└── voice.py         ← voice_command
+├── command_base.py       ← start, help, cancel
+├── command_project.py    ← init, project, projects, clone
+├── command_sessions.py   ← sessions, use, last, new
+├── command_info.py       ← status, mcp, skills
+└── command_voice.py      ← voice_command
 ```
 
-**Archivos:** bot/handlers/commands.py → múltiples ficheros
+**Archivos:** bot/handlers/commands.py → command_base.py, command_project.py, command_sessions.py, command_info.py, command_voice.py
 
-**Estado:** ⏳ Pendiente
+**Estado:** ✅ Completado (2026-05-15)
 
 ---
 
