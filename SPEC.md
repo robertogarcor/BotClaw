@@ -52,7 +52,7 @@
 
 ### 3.3 Capa de Datos
 
-- **Base de datos:** SQLite (bot.db)
+- **Base de datos:** SQLite (data/botclaw.db)
 - **Tablas:** users, sessions
 
 ## 4. Requisitos del Sistema
@@ -121,11 +121,16 @@ faster-whisper
 ## 8. Flujo de Usuario
 
 ```
-1. /start → El bot registra al usuario, crea sesión vacía
+1. /start → El bot registra al usuario
 2. /init /path → El usuario establece el directorio de trabajo
 3. Mensaje → El bot envía a OpenCode, recibe respuesta
 4. Pregunta del agente → El bot forwardea al usuario, envía la respuesta
 5. /new → Crea sesión nueva, mantiene el mismo directorio
+6. /sessions → Lista sesiones del proyecto actual
+7. /use <id> → Selecciona sesión por ID
+8. /last → Usa la última sesión
+9. /projects → Lista todos los proyectos (desde API)
+10. /voice on/off → Activa/desactiva respuestas de voz
 ```
 
 ## 9. Configuración
@@ -136,7 +141,8 @@ Variables de entorno (`.env`):
 TELEGRAM_BOT_TOKEN=xxx
 OPENCODE_SERVER_URL=http://localhost:4097
 OPENCODE_SERVER_PASSWORD=opcional
-USERS_ALLOWED=user1,user2  # Vacío = permitir todos
+USERS_ALLOWED=user1,user2  # Vacío = permitir todos (con o sin @)
+TTS_VOICE=es-MX-DaliaNeural  # Voz configurable (edge-tts)
 LOG_LEVEL=INFO
 ```
 
@@ -181,3 +187,7 @@ LOG_LEVEL=INFO
 - Métricas y logging
 - Configuración de servidor MCP
 - Soporte para chats de grupo
+
+## 13. Historial del Proyecto
+
+Las tareas realizadas y pendientes están documentadas en [HISTORY.md](HISTORY.md).
