@@ -294,11 +294,15 @@ async def create_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> 
     args = context.args
 
     if not args:
-        await update.message.reply_text("Usage: /create <path>\nExample: /create /home/user/myproject")
+        await update.message.reply_text("Usage: /create <name|path>\nExample: /create myproject or /create /home/user/myproject")
         return
 
-    path = " ".join(args)
-    full_path = str(Path(path).expanduser().resolve())
+    raw_path = " ".join(args)
+
+    if raw_path.startswith("/") or raw_path.startswith("~"):
+        full_path = str(Path(raw_path).expanduser().resolve())
+    else:
+        full_path = str(Path(Settings.PROJECTS_BASE_DIR) / raw_path)
 
     if Path(full_path).exists():
         await update.message.reply_text(f"📁 Directory already exists: {full_path}\nUse /init {full_path} to use it.")

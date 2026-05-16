@@ -59,11 +59,13 @@ BotClaw permite a los usuarios interactuar con OpenCode desde Telegram como si l
 | /start | Registrarse y obtener mensaje de bienvenida |
 | /help | Mostrar ayuda |
 | /init <path> | Establecer tu directorio de trabajo |
+| /create <name\|path> | Crear nuevo directorio de proyecto |
 | /clone <url> | Clonar un repositorio git |
 | /new | Iniciar una nueva sesión de OpenCode |
 | /project | Mostrar proyecto actual |
+| /projects | Listar todos los proyectos |
 | /status | Mostrar información del proyecto actual |
-| /sessions | Listar sesiones disponibles de OpenCode |
+| /sessions [path] | Listar sesiones disponibles de OpenCode |
 | /use <id> | Seleccionar sesión por ID |
 | /last | Usar última sesión |
 | /mcp | Mostrar servidores MCP disponibles |
@@ -80,6 +82,8 @@ OPENCODE_SERVER_URL=http://localhost:4097
 OPENCODE_SERVER_PASSWORD=opcional
 USERS_ALLOWED=user1,user2
 USER_IDS_ALLOWED=123456789,987654321
+TTS_VOICE=es-MX-DaliaNeural
+PROJECTS_BASE_DIR=~/projects
 LOG_LEVEL=INFO
 ```
 

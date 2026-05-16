@@ -32,7 +32,7 @@ async def help_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> No
         "/init <path> - Set working directory\n\n"
         
         "📁 *Project*\n"
-        "/create <path> - Create new project directory\n"
+        "/create <name|path> - Create new project directory\n"
         "/project - Show current project info\n"
         "/projects - List all your projects\n"
         "/clone <url> - Clone git repository\n\n"
