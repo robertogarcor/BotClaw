@@ -224,10 +224,16 @@ bot/handlers/
 
 ---
 
-### 19. Revisar comando /clone
-**Descripción:** Revisar el comando `/clone` para soportar clonar repositorios locales y remotos. Actualmente solo soporta URLs remotas de git. Eliminar uso de `set_working_dir` que ya no existe.
+### 19. Mejorar comando /clone
+**Descripción:** Mejorar el comando `/clone` para repositorios remotos. Actualmente funciona pero puede mejorarse.
 
-**Archivos:** bot/handlers/commands.py - clone_command()
+**Mejoras propuestas:**
+- Auto-hacer `/init` después de clonar exitosamente
+- Soportar repos privados con SSH
+- Mostrar progreso durante la clonación
+- Validar URL antes de clonar
+
+**Archivos:** bot/handlers/command_project.py - clone_command()
 
 **Estado:** ⏳ Pendiente
 
