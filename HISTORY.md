@@ -170,6 +170,21 @@
 
 ---
 
+### 34. `/last` siempre muestra la sesión más reciente del proyecto activo
+**Descripción:** `/last` actualmente respeta la sesión configurada con `/use`. Debe cambiar para siempre mostrar la sesión más reciente del proyecto activo, ignorando `/use`.
+
+**Implementación:**
+- Eliminar rama de `continue_session(saved_session)` en `last_command()`
+- Usar `get_sessions_from_api(path)` + ordenar por `time.updated DESC`
+- Tomar la primera sesión (más reciente)
+- Unificar mensaje de respuesta
+
+**Archivos:** bot/handlers/command_sessions.py - last_command()
+
+**Estado:** ✅ Completado (2026-05-17)
+
+---
+
 ## Notas Técnicas
 
 - Puerto de OpenCode: **4097** (no 4096)

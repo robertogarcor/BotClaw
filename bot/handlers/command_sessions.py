@@ -136,37 +136,6 @@ async def last_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> No
     session_manager = SessionManager()
 
     try:
-        saved_session = session_manager.get_current_session(chat_id)
-        if saved_session and saved_session.session_id:
-            server = ServerFactory.create_opencode(
-                url=Settings.OPENCODE_SERVER_URL,
-                password=Settings.OPENCODE_SERVER_PASSWORD
-            )
-            if server.continue_session(saved_session.session_id):
-                session_manager.set_session_id(chat_id, saved_session.path, saved_session.session_id)
-                try:
-                    details = server.get_session_details(saved_session.session_id)
-                    title = details.get("title", "") if details else ""
-                    title_escaped = title.replace("_", r"\_").replace("*", r"\*").replace("`", r"\`") if title else ""
-                except Exception:
-                    title_escaped = ""
-
-                if title_escaped:
-                    msg = (
-                        f"✅ Using saved session:\n"
-                        f"Session: `{saved_session.session_id}`\n"
-                        f"Title: {title_escaped}\n"
-                        f"Path: `{saved_session.path}`"
-                    )
-                else:
-                    msg = (
-                        f"✅ Using saved session:\n"
-                        f"Session: `{saved_session.session_id}`\n"
-                        f"Path: `{saved_session.path}`"
-                    )
-                await update.message.reply_text(msg, parse_mode="Markdown")
-                return
-
         user_dir = session_manager.get_current_path(chat_id)
         if not user_dir:
             await update.message.reply_text("Use /init to set your project directory first.")
@@ -174,41 +143,22 @@ async def last_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> No
 
         user_dir = user_dir.rstrip("/")
 
-        server = ServerFactory.create_opencode(
-            url=Settings.OPENCODE_SERVER_URL,
-            password=Settings.OPENCODE_SERVER_PASSWORD
-        )
+        sessions = session_manager.get_sessions_from_api(user_dir)
 
-        sessions = server.list_sessions()
-
-        matching_sessions = []
-        tui_sessions = []
-        for session in sessions:
-            directory = session.get("directory", "").rstrip("/")
-            title = session.get("title", "")
-            if directory.startswith(user_dir) or user_dir.startswith(directory):
-                if title and not title.startswith("BotClaw session for"):
-                    tui_sessions.append(session)
-                else:
-                    matching_sessions.append(session)
-
-        if not tui_sessions and not matching_sessions:
+        if not sessions:
             await update.message.reply_text(
                 f"No sessions found for:\n{user_dir}\n\n"
                 "Use /new to create a new session."
             )
             return
 
-        if tui_sessions:
-            latest_session = tui_sessions[0]
-        else:
-            latest_session = matching_sessions[0]
+        sessions.sort(key=lambda x: x.get("time", {}).get("updated", 0), reverse=True)
+        latest_session = sessions[0]
 
         session_id = latest_session.get("id", "")
         title = latest_session.get("title", "Untitled")
         title_escaped = title.replace("_", r"\_").replace("*", r"\*").replace("`", r"\`")
 
-        session_manager = SessionManager()
         session_manager.set_session_id(chat_id, user_dir, session_id)
 
         await update.message.reply_text(
