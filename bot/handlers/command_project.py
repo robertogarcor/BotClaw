@@ -67,14 +67,46 @@ async def projects_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -
         projects_data = projects.json()
         projects_data = [p for p in projects_data if p.get("id") != "global"]
 
-        if not projects_data:
+        sessions = server._session.get(
+            f"{server.url}/session",
+            timeout=30
+        )
+
+        global_projects = {}
+        if sessions.status_code == 200:
+            for s in sessions.json():
+                if s.get("projectID") == "global" and s.get("directory"):
+                    dir_path = s["directory"]
+                    if dir_path not in global_projects:
+                        global_projects[dir_path] = s
+
+        registered_paths = {p.get("worktree") for p in projects_data}
+        global_projects = {k: v for k, v in global_projects.items() if k not in registered_paths}
+
+        all_projects = []
+        for project in projects_data:
+            all_projects.append({
+                "path": project.get("worktree", ""),
+                "time": project.get("time", {}),
+                "session_id": None,
+            })
+
+        for dir_path, session in global_projects.items():
+            time_data = session.get("time", {})
+            all_projects.append({
+                "path": dir_path,
+                "time": {"created": time_data.get("created", 0), "updated": time_data.get("updated", 0)},
+                "session_id": session.get("id", "None"),
+            })
+
+        if not all_projects:
             await update.message.reply_text("📂 *Projects:*\n\nNo projects found.\nUse `/init <path>` to start.")
             return
 
         response = "📂 *Projects:*\n\n"
-        for project in projects_data:
-            project_path = project.get("worktree", "")
-            time_data = project.get("time", {})
+        for project in all_projects:
+            project_path = project["path"]
+            time_data = project["time"]
             created_ts = time_data.get("created", 0)
             updated_ts = time_data.get("updated", 0)
 
@@ -88,11 +120,10 @@ async def projects_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -
             else:
                 last_access_str = "unknown"
 
-            sessions = session_manager.get_sessions_from_api(project_path)
-            session_id = sessions[0].get("id", "None") if sessions else "None"
-
-            if not project_path and sessions:
-                project_path = sessions[0].get("directory", "")
+            session_id = project["session_id"]
+            if not session_id:
+                sessions_list = session_manager.get_sessions_from_api(project_path)
+                session_id = sessions_list[0].get("id", "None") if sessions_list else "None"
 
             project_name = Path(project_path).name if project_path else "unknown"
 
