@@ -189,56 +189,43 @@ async def init_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> No
 
     if context_loaded:
         project_name = Path(full_path).name
+        msg = f"✅ *{project_name}* configurado\n\n"
+        msg += f"Path: `{full_path}`\n"
+        msg += f"Session: `{session_id}`\n"
         if is_new:
-            msg = (
-                f"✅ *{project_name}* configurado\n\n"
-                f"Path: `{full_path}`\n"
-                f"Session: `{session_id}`\n"
-                f"📄 Context: {', '.join(context_loaded)}\n\n"
-                f"*Listo para recibir mensajes.*"
-            )
+            msg += "🆕 Nueva sesión creada\n"
         else:
-            msg = (
-                f"✅ *{project_name}* configurado\n\n"
-                f"Path: `{full_path}`\n"
-                f"Session: `{session_id}`\n"
-            )
-            if title:
-                title_escaped = title.replace("_", r"\_").replace("*", r"\*").replace("`", r"\`")
-                msg += f"Title: {title_escaped}\n"
-            if created_str:
-                msg += f"Created: {created_str}\n"
-            if updated_str:
-                msg += f"Last access: {updated_str}\n"
-            msg += f"📄 Context: {', '.join(context_loaded)}\n\n"
-            msg += f"*Listo para recibir mensajes.*"
+            msg += "🔄 Sesión existente reutilizada\n"
+        if title:
+            title_escaped = title.replace("_", r"\_").replace("*", r"\*").replace("`", r"\`")
+            msg += f"Title: {title_escaped}\n"
+        if created_str:
+            msg += f"Created: {created_str}\n"
+        if updated_str:
+            msg += f"Last access: {updated_str}\n"
+        msg += f"📄 Context: {', '.join(context_loaded)}\n\n"
+        msg += f"*Listo para recibir mensajes.*"
         try:
             await update.message.reply_text(msg, parse_mode="Markdown")
         except Exception as e:
             logger.error(f"Error sending /init message: {type(e).__name__}: {e}")
     else:
         project_name = Path(full_path).name
+        msg = f"✅ *{project_name}* configurado\n\n"
+        msg += f"Path: `{full_path}`\n"
+        msg += f"Session: `{session_id}`\n"
         if is_new:
-            msg = (
-                f"✅ *{project_name}* configurado\n\n"
-                f"Path: `{full_path}`\n"
-                f"Session: `{session_id}`\n\n"
-                f"*Listo para recibir mensajes.*"
-            )
+            msg += "🆕 Nueva sesión creada\n"
         else:
-            msg = (
-                f"✅ *{project_name}* configurado\n\n"
-                f"Path: `{full_path}`\n"
-                f"Session: `{session_id}`\n"
-            )
-            if title:
-                title_escaped = title.replace("_", r"\_").replace("*", r"\*").replace("`", r"\`")
-                msg += f"Title: {title_escaped}\n"
-            if created_str:
-                msg += f"Created: {created_str}\n"
-            if updated_str:
-                msg += f"Last access: {updated_str}\n"
-            msg += f"\n*Listo para recibir mensajes.*"
+            msg += "🔄 Sesión existente reutilizada\n"
+        if title:
+            title_escaped = title.replace("_", r"\_").replace("*", r"\*").replace("`", r"\`")
+            msg += f"Title: {title_escaped}\n"
+        if created_str:
+            msg += f"Created: {created_str}\n"
+        if updated_str:
+            msg += f"Last access: {updated_str}\n"
+        msg += f"\n*Listo para recibir mensajes.*"
         try:
             await update.message.reply_text(msg, parse_mode="Markdown")
         except Exception as e:
