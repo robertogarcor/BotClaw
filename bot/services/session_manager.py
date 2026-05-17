@@ -169,7 +169,14 @@ class SessionManager:
                 if created_time:
                     created_at = datetime.fromtimestamp(created_time / 1000).strftime("%Y-%m-%d %H:%M:%S")
                     updated_at = datetime.fromtimestamp(updated_time / 1000).strftime("%Y-%m-%d %H:%M:%S") if updated_time else created_at
-                    self.save_session(chat_id, path, session.session_id, created_at, updated_at)
+                    
+                    conn = sqlite3.connect(self.db_path)
+                    conn.execute("""
+                        UPDATE sessions SET created_at = ?, updated_at = ?
+                        WHERE chat_id = ? AND path = ?
+                    """, (created_at, updated_at, chat_id, path))
+                    conn.commit()
+                    conn.close()
         except Exception as e:
             logger.error(f"Error syncing session dates: {type(e).__name__}: {e}")
 
