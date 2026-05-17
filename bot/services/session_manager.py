@@ -131,7 +131,7 @@ class SessionManager:
             else:
                 cursor.execute("""
                     INSERT INTO sessions (chat_id, path, session_id, updated_at, last_access, is_active)
-                    VALUES (?, ?, ?, CURRENT_TIMESTAMP, 1)
+                    VALUES (?, ?, ?, ?, CURRENT_TIMESTAMP, 1)
                 """, (chat_id, path, session_id, updated_at))
 
         conn.commit()
