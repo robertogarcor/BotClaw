@@ -222,3 +222,18 @@ class OpenCodeServer(BaseServer):
         except requests.RequestException as e:
             logger.error(f"Error listing MCP servers: {e}")
             return {}
+
+    def rename_session(self, session_id: str, new_title: str) -> bool:
+        try:
+            response = self._session.patch(
+                f"{self.url}/session/{session_id}",
+                json={"title": new_title},
+                timeout=30
+            )
+            if response.status_code in (200, 204):
+                return True
+            logger.error(f"Failed to rename session: {response.status_code} - {response.text}")
+            return False
+        except requests.RequestException as e:
+            logger.error(f"Error renaming session: {e}")
+            return False

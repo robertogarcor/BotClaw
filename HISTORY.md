@@ -250,7 +250,7 @@ Mejorar /clone: auto-hacer /init después de clonar, soportar repos privados con
 ### 28. Comando /rename para cambiar título de sesión
 Crear comando /rename <nuevo_titulo> usando PATCH /session/{session_id}.
 **Archivos:** bot/handlers/command_sessions.py, bot/servers/opencode.py, bot/handlers/command_base.py
-**Estado:** ⏳ Pendiente
+**Estado:** ✅ Completado (2026-05-17)
 
 ---
 

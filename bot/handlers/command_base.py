@@ -42,7 +42,8 @@ async def help_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> No
         "/sessions - List sessions of current project\n"
         "/sessions <path> - List sessions of a specific project\n"
         "/use <id> - Select a session\n"
-        "/last - Use last session\n\n"
+        "/last - Use last session\n"
+        "/rename <title> - Rename current session\n\n"
         
         "🎤 *Voice*\n"
         "/voice - Toggle voice mode\n"

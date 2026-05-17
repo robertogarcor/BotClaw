@@ -45,6 +45,7 @@ def main():
     application.add_handler(CommandHandler("skills", command_info.skills_command))
     application.add_handler(CommandHandler("use", command_sessions.use_command))
     application.add_handler(CommandHandler("last", command_sessions.last_command))
+    application.add_handler(CommandHandler("rename", command_sessions.rename_command))
     application.add_handler(CommandHandler("voice", command_voice.voice_command))
 
     application.add_handler(CallbackQueryHandler(callbacks.handle_callback))

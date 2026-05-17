@@ -200,3 +200,49 @@ async def new_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> Non
     except Exception as e:
         logger.error(f"{type(e).__name__}: {e}")
         await update.message.reply_text(f"❌ Error: {str(e)}")
+
+
+async def rename_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    from bot.services.session_manager import SessionManager
+
+    chat_id = update.effective_chat.id
+    args = context.args
+
+    if not args:
+        await update.message.reply_text("Usage: /rename <new_title>\nExample: /rename My Project v2")
+        return
+
+    new_title = " ".join(args)
+
+    session_manager = SessionManager()
+    current_path = session_manager.get_current_path(chat_id)
+    if not current_path:
+        await update.message.reply_text("Use /init first to set up your project.")
+        return
+
+    session = session_manager.get_session(chat_id, current_path)
+    if not session or not session.session_id:
+        await update.message.reply_text("No active session found.")
+        return
+
+    try:
+        server = ServerFactory.create_opencode(
+            url=Settings.OPENCODE_SERVER_URL,
+            password=Settings.OPENCODE_SERVER_PASSWORD
+        )
+
+        success = server.rename_session(session.session_id, new_title)
+
+        if success:
+            title_escaped = new_title.replace("_", r"\_").replace("*", r"\*").replace("`", r"\`")
+            await update.message.reply_text(
+                f"✅ Session renamed:\n"
+                f"Session: `{session.session_id}`\n"
+                f"Title: {title_escaped}",
+                parse_mode="Markdown"
+            )
+        else:
+            await update.message.reply_text("❌ Failed to rename session")
+    except Exception as e:
+        logger.error(f"{type(e).__name__}: {e}")
+        await update.message.reply_text(f"❌ Error: {str(e)}")
