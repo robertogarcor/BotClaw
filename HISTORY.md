@@ -234,9 +234,10 @@ get_session_details() no devuelve el campo "mode". send_prompt() lo devuelve per
 
 ---
 
-### 12. Lentitud en /init por carga de AGENTS.md y SPEC.md
-/init es lento al cargar el contexto. Posibles soluciones: cargar en background, cachear contenido, o enviar sin esperar respuesta.
-**Estado:** ⏳ Pendiente
+### 12. Eliminar carga de contexto en /init
+El LLM ya puede leer AGENTS.md/SPEC.md por su cuenta. Se eliminó la lógica de leer y enviar archivos al LLM en /init.
+**Archivos:** bot/handlers/command_project.py - init_command()
+**Estado:** ✅ Completado (2026-05-17)
 
 ---
 
@@ -266,6 +267,41 @@ Crear comando /rename <nuevo_titulo> usando PATCH /session/{session_id}.
 El TTS pronuncia literalmente el markdown del agente. Añadir clean_text_for_tts() para eliminar backticks, asteriscos, links, headers.
 **Archivos:** bot/services/tts.py
 **Estado:** ✅ Completado (2026-05-17)
+
+---
+
+### 35. Añadir init_project_git() en opencode.py
+Nuevo método que llama a POST /project/git/init?directory=path. Hace git init + registra proyecto en OpenCode.
+**Archivos:** bot/servers/opencode.py
+**Estado:** ⏳ Pendiente
+
+---
+
+### 36. Modificar init_project() para usar /project/git/init
+Cuando is_new=True: llamar a init_project_git() antes de crear la sesión. Así el proyecto se registra en OpenCode y aparece en /projects.
+**Archivos:** bot/services/session_manager.py - init_project()
+**Estado:** ⏳ Pendiente
+
+---
+
+### 37. Crear templates AGENTS.md y SPEC.md
+Funciones helper para generar archivos template al crear proyecto nuevo. AGENTS.md con secciones de arquitectura, convenciones, comandos. SPEC.md con propósito, requisitos, estado.
+**Archivos:** bot/services/session_manager.py
+**Estado:** ⏳ Pendiente
+
+---
+
+### 38. Simplificar /projects tras registro automático
+Los proyectos creados desde el bot ya aparecen en GET /project. Simplificar la lógica de sesiones globales (mantener como fallback).
+**Archivos:** bot/handlers/command_project.py - projects_command()
+**Estado:** ⏳ Pendiente
+
+---
+
+### 39. Validar comportamiento de /project/git/init
+Probar qué pasa si el directorio ya tiene .git. ¿Devuelve error o retorna proyecto existente? Determinar si /init también puede usarlo para registrar proyectos no registrados (caso TUI).
+**Archivos:** bot/servers/opencode.py, bot/services/session_manager.py
+**Estado:** ⏳ Pendiente
 
 ---
 
