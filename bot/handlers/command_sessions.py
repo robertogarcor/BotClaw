@@ -151,11 +151,6 @@ async def last_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> No
                 except Exception:
                     title_escaped = ""
 
-                msg = (
-                    f"✅ Using saved session:\n"
-                    f"Session: `{saved_session.session_id}`\n"
-                    f"Path: `{saved_session.path}`"
-                )
                 if title_escaped:
                     msg = (
                         f"✅ Using saved session:\n"
@@ -163,7 +158,13 @@ async def last_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> No
                         f"Title: {title_escaped}\n"
                         f"Path: `{saved_session.path}`"
                     )
-                await update.message.reply_text(msg)
+                else:
+                    msg = (
+                        f"✅ Using saved session:\n"
+                        f"Session: `{saved_session.session_id}`\n"
+                        f"Path: `{saved_session.path}`"
+                    )
+                await update.message.reply_text(msg, parse_mode="Markdown")
                 return
 
         user_dir = session_manager.get_current_path(chat_id)
