@@ -33,7 +33,7 @@ async def status_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> 
 
     status_text = f"📁 *Status*\n\n"
     status_text += f"Project: `{project_name}`\n"
-    status_text += f"Dir: `{current_path}`\n"
+    status_text += f"Path: `{current_path}`\n"
 
     session = session_manager.get_session(chat_id, current_path)
     if session and session.session_id:

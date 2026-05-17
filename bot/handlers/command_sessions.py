@@ -117,7 +117,13 @@ async def use_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> Non
 
         title = session_details.get("title", "Unknown")
         title_escaped = title.replace("_", r"\_").replace("*", r"\*").replace("`", r"\`")
-        await update.message.reply_text(f"✅ Now using session:\nTitle: {title_escaped}\nDir: `{directory}`", parse_mode="Markdown")
+        await update.message.reply_text(
+            f"✅ Now using session:\n"
+            f"Session: `{session_id}`\n"
+            f"Title: {title_escaped}\n"
+            f"Path: `{directory}`",
+            parse_mode="Markdown"
+        )
     except Exception as e:
         logger.error(f"{type(e).__name__}: {e}")
         await update.message.reply_text(f"❌ Error: {str(e)}")
@@ -139,7 +145,9 @@ async def last_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> No
             if server.continue_session(saved_session.session_id):
                 session_manager.set_session_id(chat_id, saved_session.path, saved_session.session_id)
                 await update.message.reply_text(
-                    f"✅ Using saved session:\nID: `{saved_session.session_id}`\nDir: `{saved_session.path}`"
+                    f"✅ Using saved session:\n"
+                    f"Session: `{saved_session.session_id}`\n"
+                    f"Path: `{saved_session.path}`"
                 )
                 return
 
@@ -187,7 +195,13 @@ async def last_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> No
         session_manager = SessionManager()
         session_manager.set_session_id(chat_id, user_dir, session_id)
 
-        await update.message.reply_text(f"✅ Connected to latest session:\nTitle: {title_escaped}\nDir: `{user_dir}`", parse_mode="Markdown")
+        await update.message.reply_text(
+            f"✅ Connected to latest session:\n"
+            f"Session: `{session_id}`\n"
+            f"Title: {title_escaped}\n"
+            f"Path: `{user_dir}`",
+            parse_mode="Markdown"
+        )
     except Exception as e:
         logger.error(f"{type(e).__name__}: {e}")
         await update.message.reply_text(f"❌ Error: {str(e)}")
@@ -214,7 +228,7 @@ async def new_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> Non
         new_session_id = session_manager.create_session_with_dir(chat_id, working_dir)
 
         if new_session_id:
-            await update.message.reply_text(f"✅ New session created:\nSession: `{new_session_id}`\nDir: `{working_dir}`", parse_mode="Markdown")
+            await update.message.reply_text(f"✅ New session created:\nSession: `{new_session_id}`\nPath: `{working_dir}`", parse_mode="Markdown")
         else:
             await update.message.reply_text("❌ Failed to create new session")
     except Exception as e:

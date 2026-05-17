@@ -50,5 +50,8 @@ async def select_session_from_callback(update: Update, context: ContextTypes.DEF
 
     title = session_details.get("title", "Unknown")
     await update.callback_query.edit_message_text(
-        f"✅ Now using session:\nTitle: {title}\nDir: {directory}"
+        f"✅ Now using session:\n"
+        f"Session: `{session_id}`\n"
+        f"Title: {title}\n"
+        f"Path: `{directory}`"
     )

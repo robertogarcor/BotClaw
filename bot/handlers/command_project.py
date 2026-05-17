@@ -192,7 +192,7 @@ async def init_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> No
         if is_new:
             msg = (
                 f"✅ *{project_name}* configurado\n\n"
-                f"Dir: `{full_path}`\n"
+                f"Path: `{full_path}`\n"
                 f"Session: `{session_id}`\n"
                 f"📄 Context: {', '.join(context_loaded)}\n\n"
                 f"*Listo para recibir mensajes.*"
@@ -200,7 +200,7 @@ async def init_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> No
         else:
             msg = (
                 f"✅ *{project_name}* configurado\n\n"
-                f"Dir: `{full_path}`\n"
+                f"Path: `{full_path}`\n"
                 f"Session: `{session_id}`\n"
             )
             if title:
@@ -221,14 +221,14 @@ async def init_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> No
         if is_new:
             msg = (
                 f"✅ *{project_name}* configurado\n\n"
-                f"Dir: `{full_path}`\n"
+                f"Path: `{full_path}`\n"
                 f"Session: `{session_id}`\n\n"
                 f"*Listo para recibir mensajes.*"
             )
         else:
             msg = (
                 f"✅ *{project_name}* configurado\n\n"
-                f"Dir: `{full_path}`\n"
+                f"Path: `{full_path}`\n"
                 f"Session: `{session_id}`\n"
             )
             if title:
@@ -330,7 +330,7 @@ async def create_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> 
     project_name = Path(full_path).name
     msg = (
         f"✅ *{project_name}* created and configured\n\n"
-        f"Dir: `{full_path}`\n"
+        f"Path: `{full_path}`\n"
         f"Session: `{session_id}`\n\n"
         f"*Listo para recibir mensajes.*"
     )
