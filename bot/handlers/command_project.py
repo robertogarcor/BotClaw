@@ -182,89 +182,26 @@ async def init_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> No
     created_str = datetime.fromtimestamp(created_ts / 1000).strftime("%d-%m-%Y %H:%M") if created_ts else None
     updated_str = datetime.fromtimestamp(updated_ts / 1000).strftime("%d-%m-%Y %H:%M") if updated_ts else None
 
-    logger.info("Checking for AGENTS.md and SPEC.md...")
-    agents_path = Path(full_path) / "AGENTS.md"
-    spec_path = Path(full_path) / "SPEC.md"
-
-    context_loaded = []
-    context_text = ""
-
-    if agents_path.exists():
-        try:
-            agents_content = agents_path.read_text()
-            context_text += f"--- AGENTS.md ---\n{agents_content}\n"
-            context_loaded.append("AGENTS.md")
-        except Exception:
-            pass
-
-    if spec_path.exists():
-        try:
-            spec_content = spec_path.read_text()
-            context_text += f"\n--- SPEC.md ---\n{spec_content}\n"
-            context_loaded.append("SPEC.md")
-        except Exception:
-            pass
-
-    session = session_manager.get_session(chat_id, full_path)
-    if session and session.session_id and context_text:
-        await update.message.reply_text("⏳ Loading project context...")
-        try:
-            server = session_manager.get_server()
-            project_name = Path(full_path).name
-            prompt = (
-                f"IMPORTANTE: Proyecto actual = {project_name}\n"
-                f"Directorio de trabajo: {full_path}\n\n"
-                f"Contexto del proyecto:\n{context_text}\n\n"
-                f"Este es el único proyecto activo. Olvida cualquier proyecto anterior."
-            )
-            response = server.send_prompt(session.session_id, prompt)
-            logger.info(f"Context loaded, response received")
-        except Exception as e:
-            logger.error(f"Failed to load context: {e}")
-
-    if context_loaded:
-        project_name = Path(full_path).name
-        msg = f"✅ *{project_name}* configurado\n\n"
-        msg += f"Path: `{full_path}`\n"
-        msg += f"Session: `{session_id}`\n"
-        if is_new:
-            msg += "🆕 Nueva sesión creada\n"
-        else:
-            msg += "🔄 Sesión existente reutilizada\n"
-        if title:
-            title_escaped = title.replace("_", r"\_").replace("*", r"\*").replace("`", r"\`")
-            msg += f"Title: {title_escaped}\n"
-        if created_str:
-            msg += f"Created: {created_str}\n"
-        if updated_str:
-            msg += f"Last access: {updated_str}\n"
-        msg += f"📄 Context: {', '.join(context_loaded)}\n\n"
-        msg += f"*Listo para recibir mensajes.*"
-        try:
-            await update.message.reply_text(msg, parse_mode="Markdown")
-        except Exception as e:
-            logger.error(f"Error sending /init message: {type(e).__name__}: {e}")
+    project_name = Path(full_path).name
+    msg = f"✅ *{project_name}* configurado\n\n"
+    msg += f"Path: `{full_path}`\n"
+    msg += f"Session: `{session_id}`\n"
+    if is_new:
+        msg += "🆕 Nueva sesión creada\n"
     else:
-        project_name = Path(full_path).name
-        msg = f"✅ *{project_name}* configurado\n\n"
-        msg += f"Path: `{full_path}`\n"
-        msg += f"Session: `{session_id}`\n"
-        if is_new:
-            msg += "🆕 Nueva sesión creada\n"
-        else:
-            msg += "🔄 Sesión existente reutilizada\n"
-        if title:
-            title_escaped = title.replace("_", r"\_").replace("*", r"\*").replace("`", r"\`")
-            msg += f"Title: {title_escaped}\n"
-        if created_str:
-            msg += f"Created: {created_str}\n"
-        if updated_str:
-            msg += f"Last access: {updated_str}\n"
-        msg += f"\n*Listo para recibir mensajes.*"
-        try:
-            await update.message.reply_text(msg, parse_mode="Markdown")
-        except Exception as e:
-            logger.error(f"Error sending /init message: {type(e).__name__}: {e}")
+        msg += "🔄 Sesión existente reutilizada\n"
+    if title:
+        title_escaped = title.replace("_", r"\_").replace("*", r"\*").replace("`", r"\`")
+        msg += f"Title: {title_escaped}\n"
+    if created_str:
+        msg += f"Created: {created_str}\n"
+    if updated_str:
+        msg += f"Last access: {updated_str}\n"
+    msg += f"\n*Listo para recibir mensajes.*"
+    try:
+        await update.message.reply_text(msg, parse_mode="Markdown")
+    except Exception as e:
+        logger.error(f"Error sending /init message: {type(e).__name__}: {e}")
 
 
 async def clone_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
