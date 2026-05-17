@@ -144,11 +144,26 @@ async def last_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> No
             )
             if server.continue_session(saved_session.session_id):
                 session_manager.set_session_id(chat_id, saved_session.path, saved_session.session_id)
-                await update.message.reply_text(
+                try:
+                    details = server.get_session_details(saved_session.session_id)
+                    title = details.get("title", "") if details else ""
+                    title_escaped = title.replace("_", r"\_").replace("*", r"\*").replace("`", r"\`") if title else ""
+                except Exception:
+                    title_escaped = ""
+
+                msg = (
                     f"✅ Using saved session:\n"
                     f"Session: `{saved_session.session_id}`\n"
                     f"Path: `{saved_session.path}`"
                 )
+                if title_escaped:
+                    msg = (
+                        f"✅ Using saved session:\n"
+                        f"Session: `{saved_session.session_id}`\n"
+                        f"Title: {title_escaped}\n"
+                        f"Path: `{saved_session.path}`"
+                    )
+                await update.message.reply_text(msg)
                 return
 
         user_dir = session_manager.get_current_path(chat_id)
