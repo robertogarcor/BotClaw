@@ -132,10 +132,11 @@ async def mcp_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> Non
 
         response_text = "🔌 *MCP Servers:*\n\n"
         for name, status in mcp_servers.items():
-            status_emoji = "✅" if status.get("connected") else "❌"
+            status_text = status.get("status", "")
+            status_emoji = "✅" if "connected" in status_text.lower() else "❌"
             response_text += f"{status_emoji} *{name}*\n"
-            if status.get("status"):
-                response_text += f"   Status: {status.get('status')}\n"
+            if status_text:
+                response_text += f"   Status: {status_text}\n"
 
         await update.message.reply_text(response_text[:4096], parse_mode="Markdown")
     except Exception as e:
