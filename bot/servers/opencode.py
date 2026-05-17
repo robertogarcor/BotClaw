@@ -81,7 +81,7 @@ class OpenCodeServer(BaseServer):
             submit_response = self._session.post(
                 f"{self.url}/session/{session_id}/message",
                 json={"parts": [{"type": "text", "text": prompt}]},
-                timeout=30
+                timeout=60
             )
         except requests.Timeout:
             logger.error("Timeout sending prompt to OpenCode server")
