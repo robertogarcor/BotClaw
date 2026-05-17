@@ -74,9 +74,13 @@ async def projects_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -
 
         global_projects = {}
         if sessions.status_code == 200:
+            base_dir = str(Path(Settings.PROJECTS_BASE_DIR).expanduser().resolve())
+            home_dir = str(Path.home())
             for s in sessions.json():
                 if s.get("projectID") == "global" and s.get("directory"):
                     dir_path = s["directory"]
+                    if dir_path in (base_dir, home_dir):
+                        continue
                     if dir_path not in global_projects:
                         global_projects[dir_path] = s
 
