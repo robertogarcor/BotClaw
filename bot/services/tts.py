@@ -1,11 +1,31 @@
 import asyncio
 import os
+import re
 import logging
 from pathlib import Path
 
 from bot.config.settings import Settings
 
 logger = logging.getLogger(__name__)
+
+
+def clean_text_for_tts(text: str) -> str:
+    text = re.sub(r'```[\s\S]*?```', '', text)
+    text = re.sub(r'`([^`]*)`', r'\1', text)
+    text = re.sub(r'!\[([^\]]*)\]\([^)]*\)', r'\1', text)
+    text = re.sub(r'\[([^\]]*)\]\([^)]*\)', r'\1', text)
+    text = re.sub(r'#{1,6}\s+', '', text)
+    text = re.sub(r'\*\*([^*]*)\*\*', r'\1', text)
+    text = re.sub(r'\*([^*]*)\*', r'\1', text)
+    text = re.sub(r'__([^_]*)__', r'\1', text)
+    text = re.sub(r'(?<!\w)_([^_]+)_(?!\w)', r'\1', text)
+    text = re.sub(r'^>\s+', '', text, flags=re.MULTILINE)
+    text = re.sub(r'^[-*+]\s+', '', text, flags=re.MULTILINE)
+    text = re.sub(r'^---+$', '', text, flags=re.MULTILINE)
+    text = re.sub(r'^\*\*\*+$', '', text, flags=re.MULTILINE)
+    text = re.sub(r'\n{2,}', '\n', text)
+    text = re.sub(r' +', ' ', text)
+    return text.strip()
 
 
 class TTSService:
@@ -15,7 +35,7 @@ class TTSService:
     async def synthesize(self, text: str, output_path: str) -> str:
         try:
             import edge_tts
-            text = text.strip()
+            text = clean_text_for_tts(text)
             logger.info(f"TTS input text: '{text[:50]}...' length: {len(text)}")
             communicate = edge_tts.Communicate(text, self.voice)
             await communicate.save(output_path)

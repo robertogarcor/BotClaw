@@ -265,7 +265,7 @@ Crear comando /rename <nuevo_titulo> usando PATCH /session/{session_id}.
 ### 33. Limpiar texto para TTS más natural
 El TTS pronuncia literalmente el markdown del agente. Añadir clean_text_for_tts() para eliminar backticks, asteriscos, links, headers.
 **Archivos:** bot/services/tts.py
-**Estado:** ⏳ Pendiente
+**Estado:** ✅ Completado (2026-05-17)
 
 ---
 
