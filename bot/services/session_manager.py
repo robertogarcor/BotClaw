@@ -28,9 +28,15 @@ class SessionManager:
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                 updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                 last_access TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                is_active INTEGER DEFAULT 0,
                 PRIMARY KEY (chat_id, path)
             )
         """)
+        try:
+            conn.execute("ALTER TABLE sessions ADD COLUMN is_active INTEGER DEFAULT 0")
+            conn.commit()
+        except Exception:
+            pass
         conn.commit()
         conn.close()
 
@@ -96,38 +102,38 @@ class SessionManager:
     def save_session(self, chat_id: int, path: str, session_id: str, created_at: str = None, updated_at: str = None) -> None:
         conn = sqlite3.connect(self.db_path)
         cursor = conn.cursor()
-        
+
         cursor.execute(
             "SELECT 1 FROM sessions WHERE chat_id = ? AND path = ?",
             (chat_id, path)
         )
         exists = cursor.fetchone() is not None
-        
+
         if exists:
             if created_at:
                 cursor.execute("""
-                    UPDATE sessions 
-                    SET session_id = ?, created_at = ?, updated_at = ?, last_access = ?
+                    UPDATE sessions
+                    SET session_id = ?, created_at = ?, updated_at = ?, last_access = CURRENT_TIMESTAMP, is_active = 1
                     WHERE chat_id = ? AND path = ?
-                """, (session_id, created_at, updated_at, updated_at, chat_id, path))
+                """, (session_id, created_at, updated_at, chat_id, path))
             else:
                 cursor.execute("""
-                    UPDATE sessions 
-                    SET session_id = ?, updated_at = ?, last_access = ?
+                    UPDATE sessions
+                    SET session_id = ?, updated_at = ?, last_access = CURRENT_TIMESTAMP, is_active = 1
                     WHERE chat_id = ? AND path = ?
-                """, (session_id, updated_at, updated_at, chat_id, path))
+                """, (session_id, updated_at, chat_id, path))
         else:
             if created_at:
                 cursor.execute("""
-                    INSERT INTO sessions (chat_id, path, session_id, created_at, updated_at, last_access)
-                    VALUES (?, ?, ?, ?, ?, ?)
-                """, (chat_id, path, session_id, created_at, updated_at, updated_at))
+                    INSERT INTO sessions (chat_id, path, session_id, created_at, updated_at, last_access, is_active)
+                    VALUES (?, ?, ?, ?, ?, CURRENT_TIMESTAMP, 1)
+                """, (chat_id, path, session_id, created_at, updated_at))
             else:
                 cursor.execute("""
-                    INSERT INTO sessions (chat_id, path, session_id, updated_at, last_access)
-                    VALUES (?, ?, ?, ?, ?)
-                """, (chat_id, path, session_id, updated_at, updated_at))
-        
+                    INSERT INTO sessions (chat_id, path, session_id, updated_at, last_access, is_active)
+                    VALUES (?, ?, ?, CURRENT_TIMESTAMP, 1)
+                """, (chat_id, path, session_id, updated_at))
+
         conn.commit()
         conn.close()
 
@@ -137,6 +143,13 @@ class SessionManager:
             "UPDATE sessions SET last_access = CURRENT_TIMESTAMP WHERE chat_id = ? AND path = ?",
             (chat_id, path)
         )
+        conn.commit()
+        conn.close()
+
+    def set_active_path(self, chat_id: int, path: str) -> None:
+        conn = sqlite3.connect(self.db_path)
+        conn.execute("UPDATE sessions SET is_active = 0 WHERE chat_id = ?", (chat_id,))
+        conn.execute("UPDATE sessions SET is_active = 1 WHERE chat_id = ? AND path = ?", (chat_id, path))
         conn.commit()
         conn.close()
 
@@ -182,6 +195,7 @@ class SessionManager:
                 updated_at = None
             
             self.save_session(chat_id, path, session_id, created_at, updated_at)
+            self.set_active_path(chat_id, path)
             return session_id, False, session_data
         
         project_name = Path(path).name
@@ -211,7 +225,8 @@ class SessionManager:
         
         if session_id:
             self.save_session(chat_id, path, session_id)
-        
+            self.set_active_path(chat_id, path)
+
         return session_id, True, data
 
     def create_session_with_dir(self, chat_id: int, path: str) -> str:
@@ -244,6 +259,7 @@ class SessionManager:
 
         if session_id:
             self.save_session(chat_id, path, session_id)
+            self.set_active_path(chat_id, path)
 
         return session_id
 
@@ -272,7 +288,7 @@ class SessionManager:
         conn = sqlite3.connect(self.db_path)
         conn.row_factory = sqlite3.Row
         cursor = conn.execute(
-            "SELECT path FROM sessions WHERE chat_id = ? ORDER BY last_access DESC LIMIT 1",
+            "SELECT path FROM sessions WHERE chat_id = ? AND is_active = 1 LIMIT 1",
             (chat_id,)
         )
         row = cursor.fetchone()

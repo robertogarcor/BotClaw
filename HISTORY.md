@@ -389,7 +389,7 @@ bot/handlers/
 
 **Archivos:** bot/services/session_manager.py - `_init_db()`, `save_session()`, `get_current_path()`, nuevo `set_active_path()`, `init_project()`
 
-**Estado:** ⏳ Pendiente
+**Estado:** ✅ Completado (2026-05-17)
 
 ---
 
