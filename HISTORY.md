@@ -271,37 +271,44 @@ El TTS pronuncia literalmente el markdown del agente. Añadir clean_text_for_tts
 ---
 
 ### 35. Añadir init_project_git() en opencode.py
-Nuevo método que llama a POST /project/git/init?directory=path. Hace git init + registra proyecto en OpenCode.
+Investigado: el endpoint POST /project/git/init solo hace git init, devuelve id="global". No registra proyectos en OpenCode. No se implementa porque no aporta valor sobre git init local.
 **Archivos:** bot/servers/opencode.py
-**Estado:** ⏳ Pendiente
+**Estado:** ❌ Cancelado (endpoint no registra proyectos)
 
 ---
 
 ### 36. Modificar init_project() para usar /project/git/init
-Cuando is_new=True: llamar a init_project_git() antes de crear la sesión. Así el proyecto se registra en OpenCode y aparece en /projects.
+No aplica — el endpoint no registra proyectos en OpenCode.
 **Archivos:** bot/services/session_manager.py - init_project()
-**Estado:** ⏳ Pendiente
+**Estado:** ❌ Cancelado
 
 ---
 
-### 37. Crear templates AGENTS.md y SPEC.md
-Funciones helper para generar archivos template al crear proyecto nuevo. AGENTS.md con secciones de arquitectura, convenciones, comandos. SPEC.md con propósito, requisitos, estado.
-**Archivos:** bot/services/session_manager.py
-**Estado:** ⏳ Pendiente
+### 37. Crear templates de contexto para proyectos nuevos
+Crear AGENTS.md, PRODUCT.md, ARCHITECTURE.md, SPEC.md y HISTORY.md con templates base al crear proyecto con /create.
+**Archivos:** bot/services/session_manager.py - create_project(), _create_template()
+**Estado:** ✅ Completado (2026-05-19)
 
 ---
 
 ### 38. Simplificar /projects tras registro automático
-Los proyectos creados desde el bot ya aparecen en GET /project. Simplificar la lógica de sesiones globales (mantener como fallback).
+No aplica — OpenCode no registra proyectos creados via API, solo desde TUI.
 **Archivos:** bot/handlers/command_project.py - projects_command()
-**Estado:** ⏳ Pendiente
+**Estado:** ❌ Cancelado
 
 ---
 
 ### 39. Validar comportamiento de /project/git/init
-Probar qué pasa si el directorio ya tiene .git. ¿Devuelve error o retorna proyecto existente? Determinar si /init también puede usarlo para registrar proyectos no registrados (caso TUI).
+Investigado: hace git init correctamente pero devuelve id="global". No diferencia entre directorio con/sin .git. No registra en GET /project.
 **Archivos:** bot/servers/opencode.py, bot/services/session_manager.py
-**Estado:** ⏳ Pendiente
+**Estado:** ✅ Investigado (2026-05-19)
+
+---
+
+### 40. /create: git init local + templates + sesión
+/create usa create_project() que: crea directorio, git init local, genera 5 templates (AGENTS.md, PRODUCT.md, ARCHITECTURE.md, SPEC.md, HISTORY.md), crea sesión.
+**Archivos:** bot/handlers/command_project.py - create_command(), bot/services/session_manager.py - create_project()
+**Estado:** ✅ Completado (2026-05-19)
 
 ---
 

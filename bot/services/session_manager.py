@@ -307,3 +307,110 @@ class SessionManager:
         if path:
             return self.get_session(chat_id, path)
         return None
+
+    @staticmethod
+    def _create_template(path: str, filename: str, content: str) -> bool:
+        target = Path(path) / filename
+        if target.exists():
+            return False
+        try:
+            target.write_text(content)
+            logger.info(f"Created {filename} in {path}")
+            return True
+        except Exception as e:
+            logger.error(f"Failed to create {filename}: {e}")
+            return False
+
+    def create_project(self, chat_id: int, path: str) -> tuple[str, bool, dict]:
+        path = path.rstrip("/")
+        project_path = Path(path)
+
+        if not project_path.exists():
+            try:
+                project_path.mkdir(parents=True, exist_ok=True)
+                logger.info(f"Created directory: {path}")
+            except Exception as e:
+                logger.error(f"Failed to create directory: {e}")
+                return "", True, {}
+
+        try:
+            import subprocess
+            subprocess.run(
+                ["git", "init"],
+                cwd=str(project_path),
+                capture_output=True,
+                check=True
+            )
+            logger.info(f"Initialized git repo in {path}")
+        except Exception as e:
+            logger.warning(f"git init failed: {e}")
+
+        project_name = project_path.name
+        today = datetime.now().strftime("%Y-%m-%d")
+
+        self._create_template(path, "AGENTS.md", f"""# {project_name} - Agent Instructions
+
+## Project Overview
+[Describe the project purpose and goals]
+
+## Architecture
+[Key architectural decisions, patterns, tech stack]
+
+## Conventions
+[Coding standards, naming conventions, commit style]
+
+## Commands
+[Build, test, lint, run commands]
+
+## Context Files
+This project uses the following context files:
+- **PRODUCT.md** - Product vision and business rules
+- **ARCHITECTURE.md** - Technical architecture and standards
+- **SPEC.md** - Current task specification (dynamic, cleared after each task)
+- **HISTORY.md** - Completed work history from SPEC.md (accumulative, never deleted)
+""")
+
+        self._create_template(path, "PRODUCT.md", f"""# {project_name} - Product Vision
+
+## Objective
+[What problem does this project solve?]
+
+## Business Rules
+[Key business logic and constraints]
+
+## User Experience
+[How should the user interact with this system?]
+""")
+
+        self._create_template(path, "ARCHITECTURE.md", f"""# {project_name} - Architecture
+
+## Tech Stack
+[Languages, frameworks, databases, services]
+
+## Structure
+[Directory layout and key components]
+
+## Standards
+[Code conventions, security practices, testing approach]
+""")
+
+        self._create_template(path, "SPEC.md", f"""# {project_name} - Current Specification
+
+## Current Task
+[What are we building right now?]
+
+## Requirements
+- [ ] Requirement 1
+- [ ] Requirement 2
+
+## Acceptance Criteria
+[How do we know it's done?]
+""")
+
+        self._create_template(path, "HISTORY.md", f"""# {project_name} - Project History
+
+## {today} - Project initialization
+* [Added]: Project setup with base structure
+""")
+
+        return self.init_project(chat_id, path)
