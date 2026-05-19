@@ -229,8 +229,9 @@ Eliminar rama continue_session. Usar get_sessions_from_api(path) + ordenar por t
 ## Tareas Pendientes
 
 ### 11. Obtener Mode en /status
-get_session_details() no devuelve el campo "mode". send_prompt() lo devuelve pero puede hacer timeout.
-**Estado:** ⏳ Pendiente
+Se obtiene el mode del agente activo combinando GET /session/{id} (agent name) + GET /agent (mode). Sin riesgo de timeout.
+**Archivos:** bot/handlers/command_info.py - status_command(), bot/servers/opencode.py - list_agents()
+**Estado:** ✅ Completado (2026-05-19)
 
 ---
 
@@ -256,10 +257,9 @@ Crear comando /rename <nuevo_titulo> usando PATCH /session/{session_id}.
 ---
 
 ### 31. Investigar por qué /create no registra proyecto en la tabla project de OpenCode
-/create crea sesión con projectID="global". OpenCode solo registra proyectos en tabla project cuando se abren desde TUI.
-**Opciones:** 1) /create hace git init, 2) /projects incluye sesiones globales, 3) Investigar otro endpoint.
+OpenCode solo registra proyectos cuando se abren desde la TUI. La API no tiene endpoint para crear proyectos. Solución implementada: /projects combina proyectos registrados + sesiones globales. /create ahora genera estructura completa (git init + templates + sesión).
 **Archivos:** bot/handlers/command_project.py, bot/handlers/command_info.py
-**Estado:** ⏳ Pendiente
+**Estado:** ✅ Resuelto (2026-05-19) — limitación de OpenCode confirmada
 
 ---
 

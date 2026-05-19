@@ -83,7 +83,13 @@ async def status_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> 
                 model_id = model_data.get("id", "unknown")
                 provider_id = model_data.get("providerID", "unknown")
                 agent = session_details.get("agent", "unknown")
-                mode = session_details.get("mode", "N/A")
+                mode = "N/A"
+                if agent != "unknown":
+                    agents = server.list_agents()
+                    for a in agents:
+                        if a.get("name") == agent:
+                            mode = a.get("mode", "N/A")
+                            break
                 status_text += f"Model: {model_id} ({provider_id})\n"
                 status_text += f"Agent: {agent} | Mode: {mode}\n"
             else:

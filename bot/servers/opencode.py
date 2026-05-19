@@ -223,6 +223,19 @@ class OpenCodeServer(BaseServer):
             logger.error(f"Error listing MCP servers: {e}")
             return {}
 
+    def list_agents(self) -> list:
+        try:
+            response = self._session.get(
+                f"{self.url}/agent",
+                timeout=10
+            )
+            if response.status_code == 200:
+                return response.json()
+            return []
+        except requests.RequestException as e:
+            logger.error(f"Error listing agents: {e}")
+            return []
+
     def rename_session(self, session_id: str, new_title: str) -> bool:
         try:
             response = self._session.patch(
