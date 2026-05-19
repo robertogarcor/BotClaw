@@ -205,6 +205,7 @@ async def init_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> No
 
 
 async def clone_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    from bot.services.user_manager import UserManager
     from bot.services.session_manager import SessionManager
 
     chat_id = update.effective_chat.id
@@ -215,7 +216,16 @@ async def clone_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> N
         return
 
     repo_url = args[0]
+
+    is_ssh = repo_url.startswith("git@") or repo_url.startswith("ssh://")
+    is_https = repo_url.startswith("https://") or repo_url.startswith("http://")
+
+    if not is_ssh and not is_https:
+        await update.message.reply_text("❌ Invalid URL. Use HTTPS (https://github.com/user/repo.git) or SSH (git@github.com:user/repo.git)")
+        return
+
     session_manager = SessionManager()
+    user_manager = UserManager()
 
     current_path = session_manager.get_current_path(chat_id)
     base_dir = str(Path(current_path).parent) if current_path else str(Path.home() / "projects")
@@ -236,13 +246,31 @@ async def clone_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> N
             check=True,
             capture_output=True
         )
-
-        await update.message.reply_text(f"✅ Cloned to:\n`{target_dir}`\n\nUse /init {target_dir} to start working with it.", parse_mode="Markdown")
-
     except subprocess.CalledProcessError as e:
         await update.message.reply_text(f"❌ Git error: {e.stderr.decode() if e.stderr else 'Unknown error'}")
+        return
     except FileNotFoundError:
         await update.message.reply_text("❌ Git is not installed on this server.")
+        return
+
+    try:
+        user_manager.get_or_create_user(chat_id, update.effective_user.username or str(chat_id))
+        session_id, is_new, session_data = session_manager.init_project(chat_id, str(target_dir))
+    except Exception as e:
+        logger.error(f"{type(e).__name__}: {e}")
+        await update.message.reply_text(f"✅ Cloned to `{target_dir}`\n\n⚠️ Error initializing: {str(e)}", parse_mode="Markdown")
+        return
+
+    msg = (
+        f"✅ *{repo_name}* cloned and configured\n\n"
+        f"Path: `{target_dir}`\n"
+        f"Session: `{session_id}`\n\n"
+        f"*Listo para recibir mensajes.*"
+    )
+    try:
+        await update.message.reply_text(msg, parse_mode="Markdown")
+    except Exception as e:
+        logger.error(f"Error sending /clone message: {type(e).__name__}: {e}")
 
 
 async def create_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:

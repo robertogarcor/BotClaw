@@ -243,9 +243,9 @@ El LLM ya puede leer AGENTS.md/SPEC.md por su cuenta. Se eliminó la lógica de 
 ---
 
 ### 19. Mejorar comando /clone
-Mejorar /clone: auto-hacer /init después de clonar, soportar repos privados con SSH, mostrar progreso, validar URL.
+Añadir validación de URL (HTTPS/SSH), auto-init tras clonar, y mensaje final con info del proyecto.
 **Archivos:** bot/handlers/command_project.py - clone_command()
-**Estado:** ⏳ Pendiente
+**Estado:** ✅ Completado (2026-05-19)
 
 ---
 
