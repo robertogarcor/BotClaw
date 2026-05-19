@@ -46,7 +46,7 @@ class TestOpenCodeServer:
     @patch('requests.Session')
     def test_list_sessions_returns_list(self, mock_session):
         mock_instance = MagicMock()
-        mock_response = Mock(status_code=200)
+        mock_response = Mock(status_code=200, text='[{"id": "ses_1", "title": "Test"}]')
         mock_response.json.return_value = [{"id": "ses_1", "title": "Test"}]
         mock_instance.get.return_value = mock_response
         mock_session.return_value = mock_instance

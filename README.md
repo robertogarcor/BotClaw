@@ -4,7 +4,7 @@ Bot de Telegram que proporciona acceso completo a las capacidades de OpenCode CL
 
 ## Estado
 
-**Versión:** 0.4.0 - Totalmente funcional
+**Versión:** 0.5.0 - Totalmente funcional
 
 ## Descripción
 
@@ -13,9 +13,11 @@ BotClaw permite a los usuarios interactuar con OpenCode desde Telegram como si l
 ## Características
 
 - Multi-tenant: Cada usuario de Telegram tiene sesión independiente
-- Compatible con API de OpenCode v1.14.41
+- Compatible con API de OpenCode v1.14.41+
 - Persistencia en SQLite para usuarios y sesiones
 - Arquitectura extensible para futuros servidores de IA
+- Voz: STT (faster-whisper) + TTS (edge-tts + ffmpeg)
+- Creación de proyectos con templates de contexto automáticos
 
 ## Requisitos
 
@@ -54,24 +56,56 @@ BotClaw permite a los usuarios interactuar con OpenCode desde Telegram como si l
 
 ## Comandos
 
+### Base
 | Comando | Descripción |
 |---------|-------------|
-| /start | Registrarse y obtener mensaje de bienvenida |
-| /help | Mostrar ayuda |
-| /init <path> | Establecer tu directorio de trabajo |
-| /create <name o path> | Crear nuevo directorio de proyecto |
-| /clone <url> | Clonar un repositorio git |
-| /new | Iniciar una nueva sesión de OpenCode |
-| /project | Mostrar proyecto actual |
-| /projects | Listar todos los proyectos |
-| /status | Mostrar información del proyecto actual |
-| /sessions [path] | Listar sesiones disponibles de OpenCode |
-| /use <id> | Seleccionar sesión por ID |
-| /last | Usar última sesión |
-| /mcp | Mostrar servidores MCP disponibles |
-| /skills | Mostrar skills del proyecto |
-| /voice on/off/status | Activar/desactivar respuestas de voz |
-| /cancel | Cancelar operación actual |
+| `/start` | Registrarse y obtener mensaje de bienvenida |
+| `/help` | Mostrar lista completa de comandos disponibles |
+| `/cancel` | Cancelar operación en curso |
+
+### Proyecto
+| Comando | Descripción |
+|---------|-------------|
+| `/init <path>` | Inicializar o cambiar a un proyecto existente. Crea sesión si no existe |
+| `/create <name\|path>` | Crear nuevo proyecto: directorio, git init, templates de contexto y sesión |
+| `/clone <url>` | Clonar repositorio git e inicializar automáticamente. Soporta HTTPS y SSH |
+| `/project` | Mostrar información del proyecto actual (path, sesión, git) |
+| `/projects` | Listar todos los proyectos registrados y sesiones globales |
+
+### Sesión
+| Comando | Descripción |
+|---------|-------------|
+| `/new` | Crear una nueva sesión de OpenCode para el proyecto actual |
+| `/sessions [path]` | Listar sesiones disponibles (del proyecto actual o de un path específico) |
+| `/use <id>` | Seleccionar una sesión existente por su ID |
+| `/last` | Usar automáticamente la sesión más reciente del proyecto activo |
+| `/rename <titulo>` | Cambiar el título de la sesión actual |
+
+### Información
+| Comando | Descripción |
+|---------|-------------|
+| `/status` | Mostrar estado completo: proyecto, sesión, modelo, agente, modo, git, voz |
+| `/mcp` | Listar servidores MCP conectados y su estado |
+| `/skills` | Mostrar skills disponibles en el directorio `.agents/skills` del proyecto |
+
+### Voz
+| Comando | Descripción |
+|---------|-------------|
+| `/voice on` | Activar respuestas de voz (TTS) |
+| `/voice off` | Desactivar respuestas de voz |
+| `/voice status` | Mostrar estado actual del modo de voz |
+
+## Context Files
+
+Al crear un proyecto con `/create`, se generan automáticamente los siguientes archivos de contexto:
+
+| Archivo | Propósito |
+|---------|-----------|
+| `AGENTS.md` | Instrucciones para el agente + referencia a otros archivos de contexto |
+| `PRODUCT.md` | Visión del producto, reglas de negocio y experiencia de usuario |
+| `ARCHITECTURE.md` | Arquitectura técnica, estructura y estándares de código |
+| `SPEC.md` | Especificación de la tarea actual (dinámico, se limpia tras cada tarea) |
+| `HISTORY.md` | Historial de trabajo completado (acumulativo, nunca se borra) |
 
 ## Configuración
 
@@ -92,8 +126,14 @@ LOG_LEVEL=INFO
 
 ```
 Usuarios de Telegram → BotClaw → Servidor de OpenCode (HTTP)
-                              ↓
-                      SQLite (users + sessions)
+                               ↓
+                       SQLite (users + sessions)
+```
+
+## Testing
+
+```bash
+.venv/bin/python3 -m pytest tests/ -v
 ```
 
 ## Licencia

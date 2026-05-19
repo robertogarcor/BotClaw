@@ -1,5 +1,11 @@
 # Changelog
 
+## [2026-05-19]
+- feat: improve /clone with URL validation and auto-init (b8e2db7)
+- feat: show mode in /status using GET /agent endpoint (fc0fdd5)
+- feat: /create now generates project templates and git init (d80bdde)
+- docs: add CHANGELOG.md to AGENTS.md review list (aded5ae)
+- docs: update CHANGELOG.md with all 79 commits (6a98ce6)
 ## [2026-05-17]
 - docs: add new tasks for project registration and templates (4a6a84f)
 - refactor: remove hardcoded context loading from /init (e1a43b9)

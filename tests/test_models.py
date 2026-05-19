@@ -8,18 +8,14 @@ class TestUser:
         user = User(chat_id=12345, username="testuser")
         assert user.chat_id == 12345
         assert user.username == "testuser"
-        assert user.working_dir == ""
+        assert user.voice_mode == "off"
         assert user.created_at is not None
 
-    def test_user_has_project_false_when_empty(self):
+    def test_user_default_values(self):
         from bot.models.user import User
-        user = User(chat_id=12345, username="testuser")
-        assert user.has_project() is False
-
-    def test_user_has_project_true_when_set(self):
-        from bot.models.user import User
-        user = User(chat_id=12345, username="testuser", working_dir="/home/user/project")
-        assert user.has_project() is True
+        user = User(chat_id=12345)
+        assert user.username == ""
+        assert user.voice_mode == "off"
 
 
 class TestSession:
@@ -28,7 +24,6 @@ class TestSession:
         session = Session(chat_id=12345)
         assert session.chat_id == 12345
         assert session.session_id == ""
-        assert session.working_dir == ""
         assert session.created_at is not None
 
     def test_session_is_active_false_when_empty(self):
