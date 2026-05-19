@@ -4,7 +4,7 @@
 
 1. Llama a `mem_context` - Obtener contexto de sesión reciente
 2. Llama a `mem_search` con palabras clave relacionadas a tu tarea - Buscar trabajo previo
-3. Lee AGENTS.md, SPEC.md, HISTORY.md y README.md - Revisar contexto del proyecto
+3. Lee AGENTS.md, SPEC.md, HISTORY.md, CHANGELOG.md y README.md - Revisar contexto del proyecto
 
 ## Rol del Agente
 
