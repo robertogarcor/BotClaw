@@ -1,113 +1,89 @@
 # Changelog
 
-All notable changes to this project will be documented in this file.
-
-## [0.5.0] - 2026-05-08
-
-### Added
-- Voice support: receive and send voice messages
-- Speech-to-Text (STT): faster-whisper for local transcription
-- Text-to-Speech (TTS): edge-tts for voice responses
-- Voice mode commands: /voice, /voice on, /voice tts, /voice off, /voice status
-- bot/services/stt.py - Speech-to-Text service
-- bot/services/tts.py - Text-to-Speech service
-- bot/services/audio_utils.py - Audio download and conversion
-- bot/handlers/voice.py - Voice message handler
-
-### Changed
-- Updated help with voice commands
-
-## [0.4.0] - 2026-05-08
-
-### Added
-- /sessions - List TUI sessions (filtered by project path)
-- /use <id> - Select existing session to use
-- /last - Auto-use last session for current project
-- set_session_id() method in SessionManager
-- Filter sessions by specific project directories
-
-### Fixed
-- /sessions now filters TUI sessions (ignores generic /home/user paths)
-- /sessions filters by user's current project (/init path)
-- /use now works correctly with get_session_details
-- /last uses startswith matching for flexible path comparison
-- OpenCode API v1.14.41 compatibility (endpoints changed from plural to singular)
-  - /sessions → /session
-  - /tui/submit-prompt → /session/:id/message
-  - Body format: {"parts": [{"type": "text", "text": prompt}]}
-- Timeout issues increased to 30s
-- Multiple connection and JSON decode errors
-- Fixed .env path loading in settings.py
-
-### Added
-- Engram persistent memory integration documented in AGENTS.md
-- Logging throughout the OpenCode server client
-- Better error handling and messages
-
-### Changed
-- Bot now fully functional with OpenCode server
-- Users can interact with OpenCode from Telegram
-
-## [0.3.1] - 2026-05-08
-
-### Added
-- Support for user_id filtering in addition to username
-- USER_IDS_ALLOWED config option in settings.py
-- Updated .env.example with USER_IDS_ALLOWED
-
-## [0.3.0] - 2026-05-08
-
-### Added
-- Core bot implementation complete
-- bot/config/settings.py - Configuration module
-- bot/models/user.py - User data model
-- bot/models/session.py - Session data model
-- bot/servers/base.py - Abstract base class for AI servers
-- bot/servers/factory.py - Factory for creating server instances
-- bot/servers/opencode.py - OpenCode server implementation
-- bot/services/user_manager.py - User management with SQLite
-- bot/services/session_manager.py - Session management with SQLite
-- bot/handlers/commands.py - Command handlers (/start, /help, /init, etc)
-- bot/handlers/messages.py - Message handler for prompts
-- bot/handlers/callbacks.py - Callback query handler
-- bot/main.py - Bot entry point
-
-### Architecture
-- Extensible server architecture (BaseServer → OpenCode → future servers)
-- Multi-tenant: each Telegram user has own session and working directory
-- SQLite database for users and sessions persistence
-- Async-ready design with clean separation of concerns
-
-## [0.2.0] - 2026-05-08
-
-### Added
-- Python virtual environment (.venv/)
-- Dependencies installed (python-telegram-bot, requests, python-dotenv, sqlalchemy)
-- config/.env.example - Configuration template
-- config/.env - Runtime configuration file
-- Git initialized with initial commit
-
-## [0.1.0] - 2026-05-08
-
-### Added
-- Initial project structure
-- AGENTS.md with agent instructions
-- SPEC.md with technical specification
-- README.md with setup instructions
-- requirements.txt with dependencies
-- .gitignore file
-
-### Project Structure
-- bot/ directory with main.py and handlers/
-- services/ for OpenCode client, session and user managers
-- models/ for database models
-- config/ for settings and environment variables
-
-### Commands Planned
-- /start, /help, /init, /clone, /new, /status
-
-## [0.0.0] - 2026-05-03
-
-### Added
-- Project conception and planning
-- Viability analysis session
+## [2026-05-17]
+- docs: add new tasks for project registration and templates (4a6a84f)
+- refactor: remove hardcoded context loading from /init (e1a43b9)
+- fix: /projects shows all projects including global sessions (359acae)
+- fix: /projects shows all projects including global sessions (cef644c)
+- fix: increase send_prompt timeout from 30s to 60s (f107168)
+- fix: save_session() missing placeholder for updated_at in INSERT (b8eada1)
+- fix: /mcp shows correct emoji based on status text (b34d220)
+- feat: clean markdown from text before TTS synthesis (1152d55)
+- feat: add /rename command to change session title (e328a5f)
+- docs: reorganize HISTORY.md with all completed tasks (2a1598a)
+- feat: show new vs reused session indicator in /init (d4831c5)
+- fix: /last now always shows most recent session (d6ff9cf)
+- fix: add parse_mode=Markdown to /last saved session message (b41b2e6)
+- fix: add Title to /last saved session message (54b990d)
+- fix: unify message format across all commands (20edba2)
+- fix: sync dates without changing active project (7e6ebf7)
+- fix: use is_active field to track current project path (66dcc31)
+## [2026-05-16]
+- docs: add tasks #25-31 to HISTORY.md (b500590)
+- fix: pass directory query param to session creation API (0b9c166)
+- docs: update README.md commands table (2981547)
+- feat: add PROJECTS_BASE_DIR env var and improve /create command (708280d)
+- feat: add /create command to create project directory and session (7a79858)
+- docs: update task #19 - improve /clone for remote repos only (62047e4)
+- fix: remove duplicate commands in /help message (5b88d6a)
+- refactor: split commands.py into modular command_xx.py files (f25faf6)
+- docs: update SPEC.md and fix duplicate Notes in HISTORY.md (843f8c6)
+## [2026-05-15]
+- docs: add task #23 for /create command (326447c)
+- feat: add /projects command listing all projects from API (f77077c)
+- chore: cleanup obsolete DB files and migration scripts (ee0925e)
+- feat: make TTS voice configurable via env var, fix auth and voice handlers (4482203)
+- fix: show full session ID in /last, fix /use /last /new /clone handlers (08161ef)
+- fix: sync session dates from API after each interaction (826b16e)
+- docs: mark task #1 as completed - load recent session on /init (5c70e1f)
+- feat: add exception handling to all API/BD calls and fix markdown parse errors (eb6354f)
+## [2026-05-14]
+- docs: add task #13 for exception handling, update SPEC.md (495837e)
+- fix: escape Markdown chars in title for /init message (1ed3fa1)
+- docs: add task #12 for /init slow loading (c0bf338)
+- docs: add task #11 for mode retrieval improvement (8ee2b4c)
+- fix: show N/A when mode not available in /status (7328f74)
+- docs: add task #10 for /status fix (1502ce6)
+- fix: use get_session_details instead of send_prompt for /status model info (02f41d3)
+- docs: reorder tasks in HISTORY.md (1-9) (3348a69)
+- docs: update task #9 completion date (e27b9f8)
+- fix: remove backticks from non-selectable fields in /status (d488f6d)
+## [2026-05-12]
+- docs: update HISTORY.md with /sessions progress (b63474f)
+- fix: sync session dates from API on /init, improve /sessions label (2ed32a9)
+- feat: Mejorar formato de fechas en /status y /sessions (d598540)
+- feat: Mostrar fechas de sesión en /status y /sessions (f033cf4)
+- fix: Eliminar texto duplicado en Gestión de Sesiones de SPEC.md (f865ec5)
+- feat: Nueva estructura de BD simplificada (db9771e)
+- feat: Actualizar estructura de BD con campos nuevos (972e593)
+- docs: Actualizar endpoints de API con filtrado por directory (83b808c)
+- docs: Añadir URL de documentación de API de OpenCode (6f95441)
+## [2026-05-10]
+- docs: Añadido idioma español en rol del agente (da75dae)
+- fix: Import modules desde bot/ (0eafbe4)
+- docs: Documentación en español reorganizada (2907752)
+## [2026-05-09]
+- feat: add model/mode/agent to /status, reorder fields, update ServerResponse (5081e91)
+- feat: add skills to /project command, add /project to help in two sections (c494879)
+- fix: show full session ID in /project, add /project to help (4648652)
+- feat: add /project command, prefix messages with project info, update AGENTS.md (2c2b76a)
+- feat: add /skills command to show project skills (ec5e8c6)
+- feat: improve /sessions display with title, path, and undefined fallback (c592be9)
+- feat: fix sessions - /new uses working_dir, /sessions filters by title, /use accepts partial IDs, /last uses saved session (7cc05f2)
+- feat: add voice mode to /status command (649dc92)
+- feat: show text after voice response, compact format (609a319)
+- feat: simplify voice commands - remove /voice tts, use on/off only (546e4ed)
+- feat: /init auto-loads project context, fix TTS voice, remove /cd (ad2997a)
+## [2026-05-08]
+- fix: implement voice response sending (3f3d3f3)
+- feat: add voice support (STT + TTS) (1d528f2)
+- fix: improve session filtering and selection (8235380)
+- feat: add /use and /last commands for session management (07d936a)
+- fix: add /sessions and /mcp to /help command (c7e58c1)
+- docs: update AGENTS.md with memory check instructions (ad40a6e)
+- test: add pytest test suite (20 tests) (8b3c639)
+- feat: add /sessions and /mcp commands (5414c03)
+- docs: update README with current features and architecture (05c071d)
+- feat: implement BotClaw Telegram bot (fd62307)
+- docs: update CHANGELOG and AGENTS.md (c471301)
+- Initial project setup (6f173d2)
