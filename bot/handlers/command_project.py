@@ -88,6 +88,8 @@ async def projects_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -
                     dir_path = s["directory"]
                     if not is_under_base_dir(dir_path):
                         continue
+                    if str(Path(dir_path).expanduser().resolve()) == str(base_dir):
+                        continue
                     if dir_path not in global_projects:
                         global_projects[dir_path] = s
 
