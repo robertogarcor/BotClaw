@@ -7,13 +7,13 @@ from telegram.ext import ContextTypes
 
 from bot.config.settings import Settings
 from bot.servers.factory import ServerFactory
+from bot.services.session_manager import SessionManager
+from bot.services.user_manager import UserManager
 
 logger = logging.getLogger(__name__)
 
 
 async def project_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
-    from bot.services.session_manager import SessionManager
-
     chat_id = update.effective_chat.id
     session_manager = SessionManager()
     current_path = session_manager.get_current_path(chat_id)
@@ -44,10 +44,18 @@ async def project_command(update: Update, context: ContextTypes.DEFAULT_TYPE) ->
 
 
 async def projects_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
-    from bot.services.session_manager import SessionManager
-
     chat_id = update.effective_chat.id
     session_manager = SessionManager()
+    base_dir = Path(Settings.PROJECTS_BASE_DIR).expanduser().resolve()
+
+    def is_under_base_dir(raw_path: str) -> bool:
+        if not raw_path:
+            return False
+        try:
+            candidate = Path(raw_path).expanduser().resolve()
+            return candidate == base_dir or base_dir in candidate.parents
+        except Exception:
+            return False
 
     try:
         server = ServerFactory.create_opencode(
@@ -66,6 +74,7 @@ async def projects_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -
 
         projects_data = projects.json()
         projects_data = [p for p in projects_data if p.get("id") != "global"]
+        projects_data = [p for p in projects_data if is_under_base_dir(p.get("worktree", ""))]
 
         sessions = server._session.get(
             f"{server.url}/session",
@@ -74,12 +83,10 @@ async def projects_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -
 
         global_projects = {}
         if sessions.status_code == 200:
-            base_dir = str(Path(Settings.PROJECTS_BASE_DIR).expanduser().resolve())
-            home_dir = str(Path.home())
             for s in sessions.json():
                 if s.get("projectID") == "global" and s.get("directory"):
                     dir_path = s["directory"]
-                    if dir_path in (base_dir, home_dir):
+                    if not is_under_base_dir(dir_path):
                         continue
                     if dir_path not in global_projects:
                         global_projects[dir_path] = s
@@ -144,9 +151,6 @@ async def projects_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -
 
 
 async def init_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
-    from bot.services.user_manager import UserManager
-    from bot.services.session_manager import SessionManager
-
     chat_id = update.effective_chat.id
     args = context.args
 
@@ -205,9 +209,6 @@ async def init_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> No
 
 
 async def clone_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
-    from bot.services.user_manager import UserManager
-    from bot.services.session_manager import SessionManager
-
     chat_id = update.effective_chat.id
     args = context.args
 
@@ -264,7 +265,8 @@ async def clone_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> N
     msg = (
         f"✅ *{repo_name}* cloned and configured\n\n"
         f"Path: `{target_dir}`\n"
-        f"Session: `{session_id}`\n\n"
+        f"Session: `{session_id}`\n"
+        f"🆕 Nueva sesión creada\n\n"
         f"*Listo para recibir mensajes.*"
     )
     try:
@@ -274,9 +276,6 @@ async def clone_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> N
 
 
 async def create_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
-    from bot.services.user_manager import UserManager
-    from bot.services.session_manager import SessionManager
-
     chat_id = update.effective_chat.id
     args = context.args
 
@@ -308,7 +307,8 @@ async def create_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> 
     msg = (
         f"✅ *{project_name}* created and configured\n\n"
         f"Path: `{full_path}`\n"
-        f"Session: `{session_id}`\n\n"
+        f"Session: `{session_id}`\n"
+        f"🆕 Nueva sesión creada\n\n"
         f"*Listo para recibir mensajes.*"
     )
     try:

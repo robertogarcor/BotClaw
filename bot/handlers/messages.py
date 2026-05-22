@@ -33,8 +33,11 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE, tex
 
     if not current_path:
         await update.message.reply_text(
-            "Please set your working directory first using /init <path>\n"
-            "Example: /init /home/user/myproject"
+            "Please set your working directory first.\n\n"
+            "Use /init <path> to open an existing project\n"
+            "Example: /init /home/user/myproject\n\n"
+            "Or use /create <name|path> to create a new project\n"
+            "Example: /create my-new-project"
         )
         return
 
