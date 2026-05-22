@@ -60,21 +60,20 @@ BotClaw permite a los usuarios interactuar con OpenCode desde Telegram como si l
 
 ## Comandos
 
-### Base
+### Inicio
 | Comando | Descripción |
 |---------|-------------|
 | `/start` | Registrarse y obtener mensaje de bienvenida |
 | `/help` | Mostrar lista completa de comandos disponibles |
-| `/cancel` | Cancelar operación en curso |
+| `/init <path>` | Inicializar o cambiar a un proyecto existente. Crea sesión si no existe |
 
 ### Proyecto
 | Comando | Descripción |
 |---------|-------------|
-| `/init <path>` | Inicializar o cambiar a un proyecto existente. Crea sesión si no existe |
 | `/create <name\|path>` | Crear nuevo proyecto: directorio, git init, templates de contexto y sesión |
-| `/clone <url>` | Clonar repositorio git e inicializar automáticamente. Soporta HTTPS y SSH |
 | `/project` | Mostrar información del proyecto actual (path, sesión, git) |
 | `/projects` | Listar todos los proyectos registrados y sesiones globales |
+| `/clone <url>` | Clonar repositorio git e inicializar automáticamente. Soporta HTTPS y SSH |
 
 ### Sesión
 | Comando | Descripción |
@@ -85,20 +84,22 @@ BotClaw permite a los usuarios interactuar con OpenCode desde Telegram como si l
 | `/last` | Usar automáticamente la sesión más reciente del proyecto activo |
 | `/rename <titulo>` | Cambiar el título de la sesión actual |
 
-### Información
+### Voz
+| Comando | Descripción |
+|---------|-------------|
+| `/voice` | Alternar modo de voz on/off |
+| `/voice on` | Activar respuestas de voz (TTS) |
+| `/voice off` | Desactivar respuestas de voz |
+| `/voice status` | Mostrar estado actual del modo de voz |
+
+### Utilidades
 | Comando | Descripción |
 |---------|-------------|
 | `/status` | Mostrar estado completo: proyecto, sesión, modelo, agente, modo, git, voz |
 | `/mode` | Alternar modo del agente entre `build` y `plan` |
 | `/mcp` | Listar servidores MCP conectados y su estado |
 | `/skills` | Mostrar skills disponibles en el directorio `.agents/skills` del proyecto |
-
-### Voz
-| Comando | Descripción |
-|---------|-------------|
-| `/voice on` | Activar respuestas de voz (TTS) |
-| `/voice off` | Desactivar respuestas de voz |
-| `/voice status` | Mostrar estado actual del modo de voz |
+| `/cancel` | Cancelar operación en curso |
 
 ## Context Files
 
