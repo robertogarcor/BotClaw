@@ -7,14 +7,13 @@ from telegram.ext import ContextTypes
 
 from bot.config.settings import Settings
 from bot.servers.factory import ServerFactory
+from bot.services.session_manager import SessionManager
+from bot.services.user_manager import UserManager
 
 logger = logging.getLogger(__name__)
 
 
 async def status_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
-    from bot.services.session_manager import SessionManager
-    from bot.services.user_manager import UserManager
-
     chat_id = update.effective_chat.id
     user_manager = UserManager()
     user = user_manager.get_user(chat_id)

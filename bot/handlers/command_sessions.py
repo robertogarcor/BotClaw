@@ -6,13 +6,12 @@ from telegram.ext import ContextTypes
 
 from bot.config.settings import Settings
 from bot.servers.factory import ServerFactory
+from bot.services.session_manager import SessionManager
 
 logger = logging.getLogger(__name__)
 
 
 async def sessions_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
-    from bot.services.session_manager import SessionManager
-
     chat_id = update.effective_chat.id
     args = context.args
 
@@ -73,8 +72,6 @@ async def sessions_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -
 
 
 async def use_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
-    from bot.services.session_manager import SessionManager
-
     chat_id = update.effective_chat.id
     args = context.args
 
@@ -130,8 +127,6 @@ async def use_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> Non
 
 
 async def last_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
-    from bot.services.session_manager import SessionManager
-
     chat_id = update.effective_chat.id
     session_manager = SessionManager()
 
@@ -174,8 +169,6 @@ async def last_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> No
 
 
 async def new_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
-    from bot.services.session_manager import SessionManager
-
     chat_id = update.effective_chat.id
     session_manager = SessionManager()
 
@@ -203,8 +196,6 @@ async def new_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> Non
 
 
 async def rename_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
-    from bot.services.session_manager import SessionManager
-
     chat_id = update.effective_chat.id
     args = context.args
 

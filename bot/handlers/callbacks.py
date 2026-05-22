@@ -1,5 +1,16 @@
+import logging
+
 from telegram import Update
 from telegram.ext import ContextTypes
+
+from bot.config.settings import Settings
+from bot.handlers.command_base import help_command
+from bot.handlers.command_info import status_command
+from bot.handlers.command_sessions import new_command
+from bot.servers.factory import ServerFactory
+from bot.services.session_manager import SessionManager
+
+logger = logging.getLogger(__name__)
 
 
 async def handle_callback(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
@@ -9,13 +20,10 @@ async def handle_callback(update: Update, context: ContextTypes.DEFAULT_TYPE) ->
     data = query.data
 
     if data == "new_session":
-        from bot.handlers.commands import new_command
         await new_command(update, context)
     elif data == "status":
-        from bot.handlers.commands import status_command
         await status_command(update, context)
     elif data == "help":
-        from bot.handlers.commands import help_command
         await help_command(update, context)
     elif data.startswith("session:"):
         session_id = data.split(":", 1)[1]
@@ -23,12 +31,6 @@ async def handle_callback(update: Update, context: ContextTypes.DEFAULT_TYPE) ->
 
 
 async def select_session_from_callback(update: Update, context: ContextTypes.DEFAULT_TYPE, session_id: str) -> None:
-    from bot.services.session_manager import SessionManager
-    from bot.servers.factory import ServerFactory
-    from bot.config.settings import Settings
-    import logging
-
-    logger = logging.getLogger(__name__)
     chat_id = update.effective_chat.id
 
     server = ServerFactory.create_opencode(
