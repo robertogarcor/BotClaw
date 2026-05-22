@@ -312,6 +312,97 @@ Investigado: hace git init correctamente pero devuelve id="global". No diferenci
 
 ---
 
+### 41. Mejorar mensaje inicial sin proyecto activo
+Cuando no existe directorio activo (p. ej. primera ejecución con BD local vacía), el bot ahora sugiere dos caminos claros: abrir proyecto existente con `/init <path>` o crear uno nuevo con `/create <name|path>`.
+**Archivos:** bot/handlers/messages.py - handle_message()
+**Estado:** ✅ Completado (2026-05-20)
+
+---
+
+### 42. Fix: /status no mostraba correctamente Model/Agent/Mode
+Se reforzó el parseo para soportar variaciones de respuesta de la API (`/session/{id}` y `/agent`) y evitar fallos cuando `/agent` devuelve objeto en vez de lista.
+**Archivos:** bot/handlers/command_info.py - status_command(), bot/servers/opencode.py - list_agents()
+**Estado:** ✅ Completado (2026-05-20)
+
+---
+
+### 43. Fix: /status obtiene model/agent desde mensajes de sesión
+La API de `GET /session/{id}` no devuelve `model/agent/mode` en esta versión, así que `/status` ahora hace fallback a `GET /session/{id}/message` y toma la última respuesta del assistant para mostrar esos campos.
+**Archivos:** bot/handlers/command_info.py - status_command(), bot/servers/opencode.py - get_session_messages()
+**Estado:** ✅ Completado (2026-05-20)
+
+---
+
+### 44. Comando /mode como toggle build/plan
+Se implementó `/mode` como toggle simple entre `build` y `plan`. El modo elegido se guarda por chat en `context.user_data` y se envía en cada prompt a OpenCode usando el campo `agent` del endpoint de mensajes.
+**Archivos:** bot/handlers/command_info.py - mode_command(), bot/handlers/messages.py - handle_message(), bot/servers/opencode.py - send_prompt(), bot/main.py, bot/handlers/command_base.py
+**Estado:** ✅ Completado (2026-05-20)
+
+---
+
+### 45. Documentar /mode en README y SPEC
+Se actualizó la documentación para incluir el comando `/mode` en las tablas de comandos y mantener consistencia con `/help`.
+**Archivos:** README.md, SPEC.md
+**Estado:** ✅ Completado (2026-05-20)
+
+---
+
+### 46. /status separa modo seleccionado vs modo efectivo
+Se mejoró `/status` para mostrar explícitamente el modo seleccionado por el bot (`/mode`) y el modo efectivo del último mensaje respondido por OpenCode.
+**Archivos:** bot/handlers/command_info.py - status_command()
+**Estado:** ✅ Completado (2026-05-20)
+
+---
+
+### 47. /clone muestra confirmación de sesión nueva
+Se actualizó el mensaje final de `/clone` para indicar explícitamente `🆕 Nueva sesión creada` debajo de `Session`, alineado con el flujo esperado de clonación.
+**Archivos:** bot/handlers/command_project.py - clone_command()
+**Estado:** ✅ Completado (2026-05-20)
+
+---
+
+### 48. /status muestra pending tras clone sin metadatos
+Cuando una sesión recién creada aún no expone modelo/agente/modo efectivo, `/status` ahora muestra `pending first response`/`pending` en lugar de `unknown`.
+**Archivos:** bot/handlers/command_info.py - status_command()
+**Estado:** ✅ Completado (2026-05-20)
+
+---
+
+### 49. /status sin fallback a último mensaje
+Se simplificó `/status` para no leer metadatos del último mensaje. Ahora usa solo datos de sesión; si no están disponibles, muestra `pending`.
+**Archivos:** bot/handlers/command_info.py - status_command()
+**Estado:** ✅ Completado (2026-05-20)
+
+---
+
+### 50. Normalizar imports en handlers y callbacks
+Se movieron imports internos de handlers a cabecera para seguir convención de proyecto. En callbacks también se corrigieron imports legacy hacia módulos actuales (`command_base`, `command_info`, `command_sessions`).
+**Archivos:** bot/handlers/command_project.py, bot/handlers/command_sessions.py, bot/handlers/command_info.py, bot/handlers/callbacks.py
+**Estado:** ✅ Completado (2026-05-20)
+
+---
+
+### 51. Restaurar fallback de /status para model/agent
+Se restauró el fallback de `/status` para leer metadatos desde `GET /session/{id}/message` cuando `GET /session/{id}` no trae `model/agent`.
+**Archivos:** bot/handlers/command_info.py - status_command()
+**Estado:** ✅ Completado (2026-05-21)
+
+---
+
+### 52. /projects filtra solo dentro de PROJECTS_BASE_DIR
+Se ajustó `/projects` para listar únicamente proyectos cuyo `worktree`/`directory` esté dentro de la ruta configurada en `PROJECTS_BASE_DIR`.
+**Archivos:** bot/handlers/command_project.py - projects_command()
+**Estado:** ✅ Completado (2026-05-21)
+
+---
+
+### 53. README con imágenes de vista general
+Se añadieron dos imágenes (`BotClaw_01` y `BotClaw_03`) en una nueva sección "Vista general" del README para presentar la app.
+**Archivos:** README.md
+**Estado:** ✅ Completado (2026-05-21)
+
+---
+
 ## Notas Técnicas
 
 - Puerto de OpenCode: **4097** (no 4096)

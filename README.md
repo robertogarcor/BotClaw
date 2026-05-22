@@ -85,6 +85,7 @@ BotClaw permite a los usuarios interactuar con OpenCode desde Telegram como si l
 | Comando | Descripción |
 |---------|-------------|
 | `/status` | Mostrar estado completo: proyecto, sesión, modelo, agente, modo, git, voz |
+| `/mode` | Alternar modo del agente entre `build` y `plan` |
 | `/mcp` | Listar servidores MCP conectados y su estado |
 | `/skills` | Mostrar skills disponibles en el directorio `.agents/skills` del proyecto |
 

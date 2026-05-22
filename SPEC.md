@@ -162,6 +162,7 @@ LOG_LEVEL=INFO
 | /use | `<id>` | Seleccionar sesión por ID |
 | /last | - | Usar última sesión |
 | /status | - | Mostrar estado completo |
+| /mode | - | Alternar modo del agente entre build y plan |
 | /mcp | - | Mostrar configuración MCP |
 | /skills | - | Mostrar skills del proyecto |
 | /voice | `[on/off/status]` | Control de modo voz |
