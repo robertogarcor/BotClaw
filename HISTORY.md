@@ -403,6 +403,13 @@ Se añadieron dos imágenes (`BotClaw_01` y `BotClaw_03`) en una nueva sección 
 
 ---
 
+### 54. Mejorar mensaje de /projects sin proyectos
+Cuando no hay proyectos en el directorio base, el mensaje ahora muestra el `PROJECTS_BASE_DIR` configurado y sugiere revisar la configuración, en lugar de sugerir `/init`.
+**Archivos:** bot/handlers/command_project.py - projects_command()
+**Estado:** ✅ Completado (2026-05-22)
+
+---
+
 ## Notas Técnicas
 
 - Puerto de OpenCode: **4097** (no 4096)

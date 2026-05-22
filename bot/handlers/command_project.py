@@ -111,7 +111,12 @@ async def projects_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -
             })
 
         if not all_projects:
-            await update.message.reply_text("📂 *Projects:*\n\nNo projects found.\nUse `/init <path>` to start.")
+            base_dir_str = str(base_dir)
+            await update.message.reply_text(
+                f"📂 *Projects:*\n\nNo projects found.\n\n"
+                f"📁 Projects base dir: `{base_dir_str}`\n"
+                f"ℹ️ Check your PROJECTS_BASE_DIR config"
+            )
             return
 
         response = "📂 *Projects:*\n\n"
