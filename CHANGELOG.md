@@ -1,6 +1,15 @@
 # Changelog
 
+## [2026-05-22]
+- docs: update HISTORY, SPEC and README (38c4809)
+- chore: add images/ to gitignore (2146895)
+- refactor: normalize imports across handlers (7879735)
+- feat: add /mode command handler (d0f4c27)
+- feat: improve project commands and messages (fd7cd7c)
+- feat: add /mode toggle for build/plan (7313fbe)
+- fix: improve /status model/agent parsing (7a7a517)
 ## [2026-05-19]
+- test: add 29 new tests, update CHANGELOG and README (b4ca74c)
 - feat: improve /clone with URL validation and auto-init (b8e2db7)
 - feat: show mode in /status using GET /agent endpoint (fc0fdd5)
 - feat: /create now generates project templates and git init (d80bdde)
