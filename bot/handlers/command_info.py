@@ -287,3 +287,48 @@ async def skills_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> 
         response_text += "\n"
 
     await update.message.reply_text(response_text[:4096], parse_mode="Markdown")
+
+
+async def mode_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    chat_id = update.effective_chat.id
+    session_manager = SessionManager()
+    current_path = session_manager.get_current_path(chat_id)
+
+    if not current_path:
+        await update.message.reply_text("Use /init to set your project first.")
+        return
+
+    session = session_manager.get_session(chat_id, current_path)
+    if not session or not session.session_id:
+        await update.message.reply_text("❌ No active session")
+        return
+
+    current_mode = context.user_data.get("agent_mode")
+
+    if not current_mode:
+        try:
+            server = ServerFactory.create_opencode(
+                url=Settings.OPENCODE_SERVER_URL,
+                password=Settings.OPENCODE_SERVER_PASSWORD
+            )
+            messages = server.get_session_messages(session.session_id)
+            for msg in reversed(messages):
+                if not isinstance(msg, dict):
+                    continue
+                info = msg.get("info", {})
+                if not isinstance(info, dict):
+                    continue
+                mode = info.get("mode")
+                if mode in ("build", "plan"):
+                    current_mode = mode
+                    break
+        except Exception:
+            current_mode = None
+
+    if current_mode not in ("build", "plan"):
+        current_mode = "build"
+
+    new_mode = "plan" if current_mode == "build" else "build"
+    context.user_data["agent_mode"] = new_mode
+
+    await update.message.reply_text(f"🔁 Modo cambiado a: *{new_mode}*", parse_mode="Markdown")
