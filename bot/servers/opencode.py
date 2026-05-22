@@ -210,6 +210,20 @@ class OpenCodeServer(BaseServer):
             logger.error(f"Error getting session details: {e}")
             return {}
 
+    def get_session_messages(self, session_id: str) -> list:
+        try:
+            response = self._session.get(
+                f"{self.url}/session/{session_id}/message",
+                timeout=30
+            )
+            if response.status_code == 200:
+                data = response.json()
+                return data if isinstance(data, list) else []
+            return []
+        except requests.RequestException as e:
+            logger.error(f"Error getting session messages: {e}")
+            return []
+
     def list_mcp_servers(self) -> dict:
         try:
             response = self._session.get(
@@ -230,7 +244,18 @@ class OpenCodeServer(BaseServer):
                 timeout=10
             )
             if response.status_code == 200:
-                return response.json()
+                data = response.json()
+                if isinstance(data, list):
+                    return data
+                if isinstance(data, dict):
+                    if isinstance(data.get("agents"), list):
+                        return data.get("agents", [])
+                    if isinstance(data.get("items"), list):
+                        return data.get("items", [])
+                    if isinstance(data.get("data"), list):
+                        return data.get("data", [])
+                logger.warning(f"Unexpected /agent response format: {type(data).__name__}")
+                return []
             return []
         except requests.RequestException as e:
             logger.error(f"Error listing agents: {e}")

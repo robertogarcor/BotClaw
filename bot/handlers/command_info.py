@@ -79,25 +79,118 @@ async def status_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> 
         try:
             session_details = server.get_session_details(session.session_id)
             if session_details:
-                model_data = session_details.get("model", {})
-                model_id = model_data.get("id", "unknown")
-                provider_id = model_data.get("providerID", "unknown")
-                agent = session_details.get("agent", "unknown")
-                mode = "N/A"
-                if agent != "unknown":
-                    agents = server.list_agents()
+                model_data = session_details.get("model")
+                if not isinstance(model_data, dict):
+                    model_data = session_details.get("info", {}).get("model", {})
+
+                model_id = "unknown"
+                provider_id = "unknown"
+                if isinstance(model_data, dict):
+                    model_id = (
+                        model_data.get("id")
+                        or model_data.get("modelID")
+                        or model_data.get("modelId")
+                        or "unknown"
+                    )
+                    provider_id = (
+                        model_data.get("providerID")
+                        or model_data.get("providerId")
+                        or model_data.get("provider")
+                        or "unknown"
+                    )
+                elif isinstance(model_data, str) and model_data.strip():
+                    model_id = model_data.strip()
+
+                agent = (
+                    session_details.get("agent")
+                    or session_details.get("agentName")
+                    or session_details.get("info", {}).get("agent")
+                    or "unknown"
+                )
+
+                mode = (
+                    session_details.get("mode")
+                    or session_details.get("info", {}).get("mode")
+                    or "N/A"
+                )
+
+                agents = server.list_agents()
+                if agent != "unknown" and agents:
                     for a in agents:
-                        if a.get("name") == agent:
-                            mode = a.get("mode", "N/A")
+                        if not isinstance(a, dict):
+                            continue
+                        name = a.get("name") or a.get("id")
+                        if name == agent:
+                            mode = a.get("mode") or mode
                             break
-                status_text += f"Model: {model_id} ({provider_id})\n"
-                status_text += f"Agent: {agent} | Mode: {mode}\n"
+
+                if model_id == "unknown" or provider_id == "unknown" or agent == "unknown":
+                    messages = server.get_session_messages(session.session_id)
+                    for msg in reversed(messages):
+                        if not isinstance(msg, dict):
+                            continue
+                        info = msg.get("info", {})
+                        if not isinstance(info, dict):
+                            continue
+
+                        nested_model = info.get("model", {}) if isinstance(info.get("model"), dict) else {}
+
+                        if model_id == "unknown":
+                            model_id = (
+                                info.get("modelID")
+                                or info.get("modelId")
+                                or nested_model.get("modelID")
+                                or nested_model.get("id")
+                                or model_id
+                            )
+
+                        if provider_id == "unknown":
+                            provider_id = (
+                                info.get("providerID")
+                                or info.get("providerId")
+                                or nested_model.get("providerID")
+                                or nested_model.get("provider")
+                                or provider_id
+                            )
+
+                        if agent == "unknown":
+                            agent = info.get("agent") or info.get("agentName") or agent
+
+                        if mode == "N/A":
+                            mode = info.get("mode") or mode
+
+                        if model_id != "unknown" and provider_id != "unknown" and agent != "unknown":
+                            break
+
+                selected_mode = context.user_data.get("agent_mode")
+                selected_mode_str = selected_mode if selected_mode in ("build", "plan") else "(not set)"
+
+                model_display = model_id
+                provider_display = provider_id
+                agent_display = agent
+                mode_effective_display = mode
+
+                if model_id == "unknown" and provider_id == "unknown":
+                    model_display = "pending first response"
+                    provider_display = "pending"
+
+                if agent == "unknown":
+                    agent_display = "pending first response"
+
+                if mode == "N/A":
+                    mode_effective_display = "pending"
+
+                status_text += f"Model: {model_display} ({provider_display})\n"
+                status_text += f"Agent: {agent_display}\n"
+                status_text += f"Mode: {selected_mode_str} (effective: {mode_effective_display})\n"
             else:
                 status_text += "Model: (info not available)\n"
-                status_text += "Agent: (info not available) | Mode: (info not available)\n"
+                status_text += "Agent: (info not available)\n"
+                status_text += "Mode: (not set) (effective: info not available)\n"
         except Exception as e:
             status_text += "Model: (error getting info)\n"
-            status_text += "Agent: (error) | Mode: (error)\n"
+            status_text += "Agent: (error)\n"
+            status_text += "Mode: (error) (effective: error)\n"
     else:
         status_text += "Session: ❌ None\n"
 
