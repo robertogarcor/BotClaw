@@ -244,8 +244,6 @@ async def mcp_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> Non
 
 
 async def skills_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
-    from bot.services.session_manager import SessionManager
-
     chat_id = update.effective_chat.id
     session_manager = SessionManager()
     current_path = session_manager.get_current_path(chat_id)

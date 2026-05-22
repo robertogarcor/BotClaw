@@ -57,7 +57,8 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE, tex
     logger.info(f"Using session: {session_id}")
 
     try:
-        response = session_manager.get_server().send_prompt(session_id, full_prompt)
+        agent_mode = context.user_data.get("agent_mode")
+        response = session_manager.get_server().send_prompt(session_id, full_prompt, agent=agent_mode)
 
         if response.control_request:
             await update.message.reply_text(

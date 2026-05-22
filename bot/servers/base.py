@@ -31,7 +31,7 @@ class BaseServer(ABC):
         pass
 
     @abstractmethod
-    def send_prompt(self, session_id: str, prompt: str) -> ServerResponse:
+    def send_prompt(self, session_id: str, prompt: str, agent: str = None) -> ServerResponse:
         pass
 
     @abstractmethod

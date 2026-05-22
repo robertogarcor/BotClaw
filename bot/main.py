@@ -33,6 +33,7 @@ def main():
     application.add_handler(CommandHandler("start", command_base.start_command))
     application.add_handler(CommandHandler("help", command_base.help_command))
     application.add_handler(CommandHandler("status", command_info.status_command))
+    application.add_handler(CommandHandler("mode", command_info.mode_command))
     application.add_handler(CommandHandler("init", command_project.init_command))
     application.add_handler(CommandHandler("project", command_project.project_command))
     application.add_handler(CommandHandler("projects", command_project.projects_command))

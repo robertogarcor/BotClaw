@@ -53,6 +53,7 @@ async def help_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> No
         
         "🔧 *Utilities*\n"
         "/status - Show current status\n"
+        "/mode - Toggle build/plan agent mode\n"
         "/mcp - Show MCP servers\n"
         "/skills - Show project skills\n"
         "/cancel - Cancel current operation\n\n"

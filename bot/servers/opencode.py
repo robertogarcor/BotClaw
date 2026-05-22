@@ -74,13 +74,17 @@ class OpenCodeServer(BaseServer):
             logger.error(f"JSON decode error: {e}, response: {response.text}")
             return "default"
 
-    def send_prompt(self, session_id: str, prompt: str) -> ServerResponse:
+    def send_prompt(self, session_id: str, prompt: str, agent: str = None) -> ServerResponse:
         logger.info(f"Sending prompt to session: {session_id}")
+
+        payload = {"parts": [{"type": "text", "text": prompt}]}
+        if agent:
+            payload["agent"] = agent
 
         try:
             submit_response = self._session.post(
                 f"{self.url}/session/{session_id}/message",
-                json={"parts": [{"type": "text", "text": prompt}]},
+                json=payload,
                 timeout=60
             )
         except requests.Timeout:
