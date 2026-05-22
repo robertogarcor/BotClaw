@@ -1,6 +1,12 @@
 # Changelog
 
 ## [2026-05-22]
+- chore: add LICENSE file (12f8de0)
+- fix: exclude base dir from /projects list (49038bf)
+- fix: improve /projects empty message (5d6a13c)
+- feat: add overview image to README (a8b1ec8)
+- chore: remove old session file (42b7a34)
+- docs: update CHANGELOG with new commits (d88ede7)
 - docs: update HISTORY, SPEC and README (38c4809)
 - chore: add images/ to gitignore (2146895)
 - refactor: normalize imports across handlers (7879735)

@@ -5,7 +5,7 @@
 ### Bot Core
 - [x] Registro de usuarios con SQLite (tabla users)
 - [x] Gestión de sesiones (crear, usar, listar, nueva)
-- [x] Comandos implementados: `/start`, `/help`, `/init`, `/project`, `/projects`, `/create`, `/clone`, `/new`, `/sessions`, `/use`, `/last`, `/status`, `/mcp`, `/skills`, `/voice`, `/cancel`
+- [x] Comandos implementados: `/start`, `/help`, `/init`, `/project`, `/projects`, `/create`, `/clone`, `/new`, `/sessions`, `/use`, `/last`, `/status`, `/mode`, `/mcp`, `/skills`, `/rename`, `/voice`, `/cancel`
 
 ### Integración OpenCode
 - [x] API v1.14.41 (puerto 4097)
