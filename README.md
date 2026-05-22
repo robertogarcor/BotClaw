@@ -2,6 +2,10 @@
 
 Bot de Telegram que proporciona acceso completo a las capacidades de OpenCode CLI.
 
+## Vista general
+
+![BotClaw overview](images/BotClaw_06.png)
+
 ## Estado
 
 **Versión:** 0.5.0 - Totalmente funcional
