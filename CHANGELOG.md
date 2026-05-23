@@ -1,6 +1,8 @@
 # Changelog
 
 ## [2026-05-23]
+- feat: update init msg to suggest /projects first (5c6e594)
+- feat: add active session marker to /sessions (1318e41)
 - feat: full bilingual i18n system (EN/ES) with /lang command and DB persistence
 - i18n: unify all bot messages to English (c9e3ff8)
 - docs: update HISTORY and CHANGELOG for /projects multi-session and /use validation (bba352d)

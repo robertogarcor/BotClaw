@@ -34,7 +34,7 @@
 
 ---
 
-## Tareas Completadas
+## Tareas a Implementar
 
 ### 1. Cargar sesión reciente al cambiar de proyecto
 Al hacer /init a un proyecto diferente, buscar la sesión más reciente de ese proyecto en la API y usarla.
@@ -466,9 +466,27 @@ Implementación completa de internacionalización con soporte inglés/español:
 Se añadió marcador ✅ para la sesión activa en `/sessions`, siguiendo la misma lógica de `/projects`.
 
 **Archivos:** bot/handlers/command_sessions.py, bot/lang/en.py, bot/lang/es.py
-**Estado:** ✅ Completado (2026-05-23, commit 1318e41)
+**Estado:** ✅ Completado (2026-05-23)
 
-## Tareas Pendientes
+### 62. Mensaje "sin proyecto" sugiere /projects primero
+Actualmente `/status` muestra "Use /init to set your project first." Se cambia a
+"No project set.\nUse /projects to see available projects, then /init <path> to set one."
+
+**Archivos:** bot/lang/en.py, bot/lang/es.py — clave "init_first"
+**Estado:** ✅ Completado (2026-05-23)
+
+### 61. Filtrar sesiones de subagentes en /sessions
+Ocultar sesiones con "@xxx subagent" en el título (ej: @explore subagent).
+Filtro OUT por regex, sin tabla DB ni tracking.
+
+**Archivos:** bot/handlers/command_sessions.py
+**Estado:** 🔲 Pendiente
+
+### 63. Mostrar idioma actual en /status
+Añadir línea "🌐 Language: EN" / "🌐 Idioma: ES" al final del output de `/status`.
+
+**Archivos:** bot/handlers/command_info.py, bot/lang/en.py, bot/lang/es.py — clave "status_lang"
+**Estado:** 🔲 Pendiente
 
 ---
 
