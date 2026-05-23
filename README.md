@@ -12,7 +12,7 @@ Bot de Telegram que proporciona acceso completo a las capacidades de OpenCode CL
 
 ## Descripción
 
-BotClaw permite a los usuarios interactuar con OpenCode desde Telegram como si lo estuvieran usando localmente. Cada usuario tiene su propia sesión y directorio de trabajo.
+BotClaw permite a los usuarios interactuar con OpenCode desde Telegram como si lo estuvieran usando localmente (español e inglés). Cada usuario tiene su propia sesión y directorio de trabajo.
 
 ## Características
 
@@ -22,6 +22,7 @@ BotClaw permite a los usuarios interactuar con OpenCode desde Telegram como si l
 - Arquitectura extensible para futuros servidores de IA
 - Voz: STT (faster-whisper) + TTS (edge-tts + ffmpeg)
 - Creación de proyectos con templates de contexto automáticos
+- Multilenguaje: interfaz en español e inglés con conmutación en runtime vía /lang
 
 ## Requisitos
 
@@ -100,6 +101,7 @@ BotClaw permite a los usuarios interactuar con OpenCode desde Telegram como si l
 | `/mcp` | Listar servidores MCP conectados y su estado |
 | `/skills` | Mostrar skills disponibles en el directorio `.agents/skills` del proyecto |
 | `/cancel` | Cancelar operación en curso |
+| `/lang <en\|es>` | Cambiar idioma entre español e inglés |
 
 ## Context Files
 
@@ -126,6 +128,7 @@ USER_IDS_ALLOWED=123456789,987654321
 TTS_VOICE=es-MX-DaliaNeural
 PROJECTS_BASE_DIR=~/projects
 LOG_LEVEL=INFO
+DEFAULT_LANG=en
 ```
 
 ## Arquitectura
