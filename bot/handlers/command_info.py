@@ -6,6 +6,7 @@ from telegram import Update
 from telegram.ext import ContextTypes
 
 from bot.config.settings import Settings
+from bot.i18n import _
 from bot.servers.factory import ServerFactory
 from bot.services.session_manager import SessionManager
 from bot.services.user_manager import UserManager
@@ -15,6 +16,7 @@ logger = logging.getLogger(__name__)
 
 async def status_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     chat_id = update.effective_chat.id
+    lang = context.user_data.get("lang", "en")
     user_manager = UserManager()
     user = user_manager.get_user(chat_id)
     
@@ -22,7 +24,7 @@ async def status_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> 
     current_path = session_manager.get_current_path(chat_id)
 
     if not current_path:
-        await update.message.reply_text("Use /init first to set up your project.")
+        await update.message.reply_text(_("init_first", lang=lang))
         return
 
     voice_mode = context.user_data.get("voice_mode", user.voice_mode if user else "off")
@@ -30,9 +32,9 @@ async def status_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> 
 
     project_name = Path(current_path).name
 
-    status_text = f"📁 *Status*\n\n"
-    status_text += f"Project: `{project_name}`\n"
-    status_text += f"Path: `{current_path}`\n"
+    status_text = _("status_header", lang=lang)
+    status_text += _("status_project", lang=lang, name=project_name)
+    status_text += _("status_path", lang=lang, path=current_path)
 
     session = session_manager.get_session(chat_id, current_path)
     if session and session.session_id:
@@ -41,7 +43,7 @@ async def status_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> 
             password=Settings.OPENCODE_SERVER_PASSWORD
         )
         
-        status_text += f"Session: `{session.session_id}`\n"
+        status_text += _("status_session", lang=lang, sid=session.session_id)
         
         try:
             session_details = server.get_session_details(session.session_id)
@@ -49,7 +51,7 @@ async def status_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> 
                 title = session_details.get("title", "")
                 if title:
                     title_escaped = title.replace("_", r"\_").replace("*", r"\*").replace("`", r"\`")
-                    status_text += f"Title: {title_escaped}\n"
+                    status_text += _("status_title", lang=lang, title=title_escaped)
         except Exception:
             pass
         
@@ -62,7 +64,7 @@ async def status_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> 
                 created_str = dt.strftime("%d-%m-%Y %H:%M")
             except:
                 created_str = str(session.created_at)
-            status_text += f"Created: {created_str}\n"
+            status_text += _("status_created", lang=lang, date=created_str)
         
         if session.last_access:
             try:
@@ -73,7 +75,7 @@ async def status_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> 
                 last_access_str = dt.strftime("%d-%m-%Y %H:%M")
             except:
                 last_access_str = str(session.last_access)
-            status_text += f"Last access: {last_access_str}\n"
+            status_text += _("status_last_access", lang=lang, date=last_access_str)
 
         try:
             session_details = server.get_session_details(session.session_id)
@@ -179,19 +181,19 @@ async def status_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> 
                 if mode == "N/A":
                     mode_effective_display = "pending"
 
-                status_text += f"Model: {model_display} ({provider_display})\n"
-                status_text += f"Agent: {agent_display}\n"
-                status_text += f"Mode: {selected_mode_str} (effective: {mode_effective_display})\n"
+                status_text += _("status_model", lang=lang, model=model_display, provider=provider_display)
+                status_text += _("status_agent", lang=lang, agent=agent_display)
+                status_text += _("status_mode", lang=lang, selected=selected_mode_str, effective=mode_effective_display)
             else:
-                status_text += "Model: (info not available)\n"
-                status_text += "Agent: (info not available)\n"
-                status_text += "Mode: (not set) (effective: info not available)\n"
+                status_text += _("status_model_na", lang=lang)
+                status_text += _("status_agent_na", lang=lang)
+                status_text += _("status_mode_na", lang=lang)
         except Exception as e:
-            status_text += "Model: (error getting info)\n"
-            status_text += "Agent: (error)\n"
-            status_text += "Mode: (error) (effective: error)\n"
+            status_text += _("status_model_error", lang=lang)
+            status_text += _("status_agent_error", lang=lang)
+            status_text += _("status_mode_error", lang=lang)
     else:
-        status_text += "Session: ❌ None\n"
+        status_text += _("status_session_none", lang=lang)
 
     if Path(current_path).exists():
         try:
@@ -202,20 +204,21 @@ async def status_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> 
                 text=True
             )
             if result.returncode == 0:
-                status_text += f"Git: ✅\n"
+                status_text += _("status_git_ok", lang=lang)
             else:
-                status_text += f"Git: ❌\n"
+                status_text += _("status_git_fail", lang=lang)
         except FileNotFoundError:
-            status_text += f"Git: ❌ (not installed)\n"
+            status_text += _("status_git_not_installed", lang=lang)
     else:
-        status_text += f"Git: ❌\n"
+        status_text += _("status_git_fail", lang=lang)
 
-    status_text += f"Voice: {voice_emoji} {voice_mode.upper()}"
+    status_text += _("status_voice", lang=lang, emoji=voice_emoji, mode=voice_mode.upper())
 
     await update.message.reply_text(status_text, parse_mode="Markdown")
 
 
 async def mcp_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    lang = context.user_data.get("lang", "en")
     try:
         server = ServerFactory.create_opencode(
             url=Settings.OPENCODE_SERVER_URL,
@@ -225,16 +228,14 @@ async def mcp_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> Non
         mcp_servers = server.list_mcp_servers()
 
         if not mcp_servers:
-            await update.message.reply_text("🔌 *MCP Servers:*\n\nNo MCP servers connected.")
+            await update.message.reply_text(_("mcp_none", lang=lang))
             return
 
-        response_text = "🔌 *MCP Servers:*\n\n"
+        response_text = _("mcp_header", lang=lang)
         for name, status in mcp_servers.items():
             status_text = status.get("status", "")
             status_emoji = "✅" if "connected" in status_text.lower() else "❌"
-            response_text += f"{status_emoji} *{name}*\n"
-            if status_text:
-                response_text += f"   Status: {status_text}\n"
+            response_text += _("mcp_item", lang=lang, emoji=status_emoji, name=name, status=status_text) + "\n"
 
         await update.message.reply_text(response_text[:4096], parse_mode="Markdown")
     except Exception as e:
@@ -244,17 +245,18 @@ async def mcp_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> Non
 
 async def skills_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     chat_id = update.effective_chat.id
+    lang = context.user_data.get("lang", "en")
     session_manager = SessionManager()
     current_path = session_manager.get_current_path(chat_id)
 
     if not current_path:
-        await update.message.reply_text("Use /init to set your project first.")
+        await update.message.reply_text(_("init_first", lang=lang))
         return
 
     skills_dir = Path(current_path) / ".agents" / "skills"
 
     if not skills_dir.exists():
-        await update.message.reply_text("🛠️ *Skills:*\n\nNo skills directory found for this project.")
+        await update.message.reply_text(_("skills_no_dir", lang=lang))
         return
 
     skills = []
@@ -275,31 +277,30 @@ async def skills_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> 
                     pass
 
     if not skills:
-        await update.message.reply_text("🛠️ *Skills:*\n\nNo skills found for this project.")
+        await update.message.reply_text(_("skills_none", lang=lang))
         return
 
-    response_text = "🛠️ *Skills*\n\n"
+    response_text = _("skills_header", lang=lang)
     for skill in skills:
-        response_text += f"• *{skill['name']}*\n"
-        if skill['description']:
-            response_text += f"  {skill['description']}\n"
-        response_text += "\n"
+        response_text += _("skills_item", lang=lang, name=skill['name'], desc=skill['description'] or "")
+        response_text += "\n\n"
 
     await update.message.reply_text(response_text[:4096], parse_mode="Markdown")
 
 
 async def mode_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     chat_id = update.effective_chat.id
+    lang = context.user_data.get("lang", "en")
     session_manager = SessionManager()
     current_path = session_manager.get_current_path(chat_id)
 
     if not current_path:
-        await update.message.reply_text("Use /init to set your project first.")
+        await update.message.reply_text(_("init_first", lang=lang))
         return
 
     session = session_manager.get_session(chat_id, current_path)
     if not session or not session.session_id:
-        await update.message.reply_text("❌ No active session")
+        await update.message.reply_text(_("no_active_session", lang=lang))
         return
 
     current_mode = context.user_data.get("agent_mode")
@@ -330,4 +331,4 @@ async def mode_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> No
     new_mode = "plan" if current_mode == "build" else "build"
     context.user_data["agent_mode"] = new_mode
 
-    await update.message.reply_text(f"🔁 Mode changed to: *{new_mode}*", parse_mode="Markdown")
+    await update.message.reply_text(_("mode_changed", lang=lang, mode=new_mode), parse_mode="Markdown")

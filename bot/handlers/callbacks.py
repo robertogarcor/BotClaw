@@ -4,6 +4,7 @@ from telegram import Update
 from telegram.ext import ContextTypes
 
 from bot.config.settings import Settings
+from bot.i18n import _
 from bot.handlers.command_base import help_command
 from bot.handlers.command_info import status_command
 from bot.handlers.command_sessions import new_command
@@ -32,6 +33,7 @@ async def handle_callback(update: Update, context: ContextTypes.DEFAULT_TYPE) ->
 
 async def select_session_from_callback(update: Update, context: ContextTypes.DEFAULT_TYPE, session_id: str) -> None:
     chat_id = update.effective_chat.id
+    lang = context.user_data.get("lang", "en")
 
     server = ServerFactory.create_opencode(
         url=Settings.OPENCODE_SERVER_URL,
@@ -41,7 +43,7 @@ async def select_session_from_callback(update: Update, context: ContextTypes.DEF
     session_details = server.get_session_details(session_id)
 
     if not session_details:
-        await update.callback_query.edit_message_text("❌ Session not found.")
+        await update.callback_query.edit_message_text(_("session_not_found", lang=lang))
         return
 
     session_manager = SessionManager()
@@ -51,9 +53,7 @@ async def select_session_from_callback(update: Update, context: ContextTypes.DEF
         session_manager.save_session(chat_id, directory, session_id)
 
     title = session_details.get("title", "Unknown")
+    title_escaped = title.replace("_", r"\_").replace("*", r"\*").replace("`", r"\`")
     await update.callback_query.edit_message_text(
-        f"✅ Now using session:\n"
-        f"Session: `{session_id}`\n"
-        f"Title: {title}\n"
-        f"Path: `{directory}`"
+        _("callback_session_selected", lang=lang, id=session_id, title=title_escaped, dir=directory)
     )

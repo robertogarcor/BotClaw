@@ -7,6 +7,7 @@ class User:
     chat_id: int
     username: str = ""
     voice_mode: str = "off"
+    lang: str = "en"
     created_at: datetime = None
 
     def __post_init__(self):

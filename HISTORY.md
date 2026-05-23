@@ -30,6 +30,7 @@
 ### Documentación / i18n
 - [x] README.md, SPEC.md, AGENTS.md, HISTORY.md, CHANGELOG.md
 - [x] Mensajes del bot unificados a inglés (100%)
+- [x] Sistema multilenguaje EN/ES con comando `/lang` y persistencia en DB
 
 ---
 
@@ -445,6 +446,20 @@ Cuando se intenta `/use` con una sesión que no pertenece al proyecto activo, mu
 Se unificaron todos los mensajes del bot a inglés. Cambios en `/init`, `/clone`, `/create`, `/use`, `/mode` y label de transcripción de voz. 6 strings editados en 4 archivos.
 
 **Archivos:** bot/handlers/command_project.py, command_sessions.py, command_info.py, messages.py
+**Estado:** ✅ Completado (2026-05-23)
+
+---
+
+### 59. Sistema multilenguaje (i18n) EN/ES
+Implementación completa de internacionalización con soporte inglés/español:
+- `bot/i18n.py`: función `_()` + diccionarios con ~160 strings por idioma
+- `/lang` command para cambiar idioma en tiempo real
+- Persistencia del idioma en DB (columna `lang` en tabla `users`)
+- Migración automática de DB con `ALTER TABLE`
+- Todos los 8 handlers migrados a `_("key", lang=...)`
+- Traducciones completas al español de todos los mensajes del bot
+
+**Archivos:** bot/i18n.py, bot/config/settings.py, bot/models/user.py, bot/services/user_manager.py, bot/handlers/command_base.py, command_info.py, command_project.py, command_sessions.py, command_voice.py, messages.py, voice.py, callbacks.py, bot/main.py
 **Estado:** ✅ Completado (2026-05-23)
 
 ## Notas Técnicas

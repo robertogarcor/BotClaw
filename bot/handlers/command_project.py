@@ -6,6 +6,7 @@ from telegram import Update
 from telegram.ext import ContextTypes
 
 from bot.config.settings import Settings
+from bot.i18n import _
 from bot.servers.factory import ServerFactory
 from bot.services.session_manager import SessionManager
 from bot.services.user_manager import UserManager
@@ -15,11 +16,12 @@ logger = logging.getLogger(__name__)
 
 async def project_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     chat_id = update.effective_chat.id
+    lang = context.user_data.get("lang", "en")
     session_manager = SessionManager()
     current_path = session_manager.get_current_path(chat_id)
 
     if not current_path:
-        await update.message.reply_text("📁 *Project:*\n\nNo project set.\nUse `/init <path>` to set your project.")
+        await update.message.reply_text(_("project_not_set", lang=lang))
         return
 
     project_name = Path(current_path).name
@@ -34,17 +36,18 @@ async def project_command(update: Update, context: ContextTypes.DEFAULT_TYPE) ->
                 skills.append(item.name)
 
     response = f"📁 *Project:*\n\n"
-    response += f"Name: `{project_name}`\n"
-    response += f"Path: `{current_path}`\n"
-    response += f"Session: `{current_session_id}`\n"
+    response += _("project_name", lang=lang, name=project_name)
+    response += _("project_path", lang=lang, path=current_path)
+    response += _("project_session", lang=lang, session=current_session_id)
     if skills:
-        response += f"Skills: {', '.join(skills)}"
+        response += _("project_skills", lang=lang, skills=', '.join(skills))
 
     await update.message.reply_text(response, parse_mode="Markdown")
 
 
 async def projects_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     chat_id = update.effective_chat.id
+    lang = context.user_data.get("lang", "en")
     session_manager = SessionManager()
     base_dir = Path(Settings.PROJECTS_BASE_DIR).expanduser().resolve()
 
@@ -69,7 +72,7 @@ async def projects_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -
         )
 
         if projects.status_code != 200:
-            await update.message.reply_text("📂 *Projects:*\n\nFailed to fetch projects from API.")
+            await update.message.reply_text(_("projects_api_fail", lang=lang))
             return
 
         projects_data = projects.json()
@@ -135,9 +138,7 @@ async def projects_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -
         if not all_projects:
             base_dir_str = str(base_dir)
             await update.message.reply_text(
-                f"📂 *Projects:*\n\nNo projects found.\n\n"
-                f"📁 Projects base dir: `{base_dir_str}`\n"
-                f"ℹ️ Check your PROJECTS_BASE_DIR config"
+                _("projects_none", lang=lang, dir=base_dir_str)
             )
             return
 
@@ -155,11 +156,11 @@ async def projects_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -
                 sessions_data = session_manager.get_sessions_from_api(project_path)
                 sessions_data.sort(key=lambda s: s.get("time", {}).get("updated", 0), reverse=True)
 
-            response += f"• *{project_name}*\n"
-            response += f"  Path: `{project_path}`\n"
+            response += _("projects_item_name", lang=lang, name=project_name)
+            response += _("projects_item_path", lang=lang, path=project_path)
 
             if not sessions_data:
-                response += f"  Session: None\n"
+                response += _("projects_item_no_session", lang=lang)
             else:
                 for i, s in enumerate(sessions_data):
                     sid = s.get("id", "None")
@@ -172,9 +173,9 @@ async def projects_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -
                     is_active_for_user = sid == active_session_id
                     is_most_recent = i == 0
                     marker = " ✅" if is_active_for_user else (" ➡️" if is_most_recent else "")
-                    response += f"  _Session:_ `{sid}`{marker}\n"
-                    response += f"  Created: {s_created_str}\n"
-                    response += f"  Last access: {s_updated_str}\n"
+                    response += _("projects_item_session", lang=lang, sid=sid, marker=marker)
+                    response += _("projects_item_created", lang=lang, date=s_created_str)
+                    response += _("projects_item_last_access", lang=lang, date=s_updated_str)
 
             response += "\n"
 
@@ -186,17 +187,18 @@ async def projects_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -
 
 async def init_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     chat_id = update.effective_chat.id
+    lang = context.user_data.get("lang", "en")
     args = context.args
 
     if not args:
-        await update.message.reply_text("Usage: /init <path>\nExample: /init /home/user/myproject")
+        await update.message.reply_text(_("init_usage", lang=lang))
         return
 
     path = " ".join(args)
     full_path = str(Path(path).expanduser().resolve())
 
     if not Path(full_path).exists():
-        await update.message.reply_text(f"❌ Path does not exist: {full_path}")
+        await update.message.reply_text(_("init_path_not_exist", lang=lang, path=full_path))
         return
 
     session_manager = SessionManager()
@@ -209,7 +211,7 @@ async def init_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> No
         session_id, is_new, session_data = session_manager.init_project(chat_id, full_path)
     except Exception as e:
         logger.error(f"{type(e).__name__}: {e}")
-        await update.message.reply_text(f"❌ Error initializing project: {str(e)}")
+        await update.message.reply_text(_("init_error", lang=lang, error=str(e)))
         return
     
     title = session_data.get("title", "") if session_data else ""
@@ -221,21 +223,16 @@ async def init_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> No
     updated_str = datetime.fromtimestamp(updated_ts / 1000).strftime("%d-%m-%Y %H:%M") if updated_ts else None
 
     project_name = Path(full_path).name
-    msg = f"✅ *{project_name}* configured\n\n"
-    msg += f"Path: `{full_path}`\n"
-    msg += f"Session: `{session_id}`\n"
-    if is_new:
-        msg += "🆕 New session created\n"
-    else:
-        msg += "🔄 Existing session reused\n"
+    msg = _("init_success", lang=lang, name=project_name, path=full_path, session=session_id,
+            is_new=_("init_new", lang=lang) if is_new else _("init_existing", lang=lang))
     if title:
         title_escaped = title.replace("_", r"\_").replace("*", r"\*").replace("`", r"\`")
-        msg += f"Title: {title_escaped}\n"
+        msg += _("status_title", lang=lang, title=title_escaped)
     if created_str:
-        msg += f"Created: {created_str}\n"
+        msg += _("status_created", lang=lang, date=created_str)
     if updated_str:
-        msg += f"Last access: {updated_str}\n"
-    msg += f"\n*Ready for messages.*"
+        msg += _("status_last_access", lang=lang, date=updated_str)
+    msg += _("ready", lang=lang)
     try:
         await update.message.reply_text(msg, parse_mode="Markdown")
     except Exception as e:
@@ -244,10 +241,11 @@ async def init_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> No
 
 async def clone_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     chat_id = update.effective_chat.id
+    lang = context.user_data.get("lang", "en")
     args = context.args
 
     if not args:
-        await update.message.reply_text("Usage: /clone <repo_url>\nExample: /clone https://github.com/user/repo.git")
+        await update.message.reply_text(_("clone_usage", lang=lang))
         return
 
     repo_url = args[0]
@@ -256,7 +254,7 @@ async def clone_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> N
     is_https = repo_url.startswith("https://") or repo_url.startswith("http://")
 
     if not is_ssh and not is_https:
-        await update.message.reply_text("❌ Invalid URL. Use HTTPS (https://github.com/user/repo.git) or SSH (git@github.com:user/repo.git)")
+        await update.message.reply_text(_("clone_invalid_url", lang=lang))
         return
 
     session_manager = SessionManager()
@@ -270,10 +268,10 @@ async def clone_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> N
     target_dir = Path(base_dir) / repo_name
 
     if target_dir.exists():
-        await update.message.reply_text(f"📁 Directory already exists: {target_dir}\nUse /init {target_dir} to use it.")
+        await update.message.reply_text(_("clone_dir_exists", lang=lang, dir=str(target_dir)))
         return
 
-    await update.message.reply_text(f"🔄 Cloning {repo_url}...")
+    await update.message.reply_text(_("clone_cloning", lang=lang, url=repo_url))
 
     try:
         subprocess.run(
@@ -282,10 +280,10 @@ async def clone_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> N
             capture_output=True
         )
     except subprocess.CalledProcessError as e:
-        await update.message.reply_text(f"❌ Git error: {e.stderr.decode() if e.stderr else 'Unknown error'}")
+        await update.message.reply_text(_("clone_git_error", lang=lang, error=e.stderr.decode() if e.stderr else 'Unknown error'))
         return
     except FileNotFoundError:
-        await update.message.reply_text("❌ Git is not installed on this server.")
+        await update.message.reply_text(_("clone_git_not_found", lang=lang))
         return
 
     try:
@@ -293,16 +291,12 @@ async def clone_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> N
         session_id, is_new, session_data = session_manager.init_project(chat_id, str(target_dir))
     except Exception as e:
         logger.error(f"{type(e).__name__}: {e}")
-        await update.message.reply_text(f"✅ Cloned to `{target_dir}`\n\n⚠️ Error initializing: {str(e)}", parse_mode="Markdown")
+        await update.message.reply_text(_("clone_init_error", lang=lang, dir=str(target_dir), error=str(e)), parse_mode="Markdown")
         return
 
-    msg = (
-        f"✅ *{repo_name}* cloned and configured\n\n"
-        f"Path: `{target_dir}`\n"
-        f"Session: `{session_id}`\n"
-        f"🆕 New session created\n\n"
-        f"*Ready for messages.*"
-    )
+    msg = _("clone_success", lang=lang, name=repo_name, path=str(target_dir), session=session_id,
+            is_new=_("new_session", lang=lang))
+    msg += _("ready", lang=lang)
     try:
         await update.message.reply_text(msg, parse_mode="Markdown")
     except Exception as e:
@@ -311,10 +305,11 @@ async def clone_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> N
 
 async def create_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     chat_id = update.effective_chat.id
+    lang = context.user_data.get("lang", "en")
     args = context.args
 
     if not args:
-        await update.message.reply_text("Usage: /create <name|path>\nExample: /create myproject or /create /home/user/myproject")
+        await update.message.reply_text(_("create_usage", lang=lang))
         return
 
     raw_path = " ".join(args)
@@ -334,17 +329,13 @@ async def create_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> 
         session_id, is_new, session_data = session_manager.create_project(chat_id, full_path)
     except Exception as e:
         logger.error(f"{type(e).__name__}: {e}")
-        await update.message.reply_text(f"❌ Error creating project: {str(e)}")
+        await update.message.reply_text(_("create_error", lang=lang, error=str(e)))
         return
 
     project_name = Path(full_path).name
-    msg = (
-        f"✅ *{project_name}* created and configured\n\n"
-        f"Path: `{full_path}`\n"
-        f"Session: `{session_id}`\n"
-        f"🆕 New session created\n\n"
-        f"*Ready for messages.*"
-    )
+    msg = _("create_success", lang=lang, name=project_name, path=full_path, session=session_id,
+            is_new=_("new_session", lang=lang))
+    msg += _("ready", lang=lang)
     try:
         await update.message.reply_text(msg, parse_mode="Markdown")
     except Exception as e:

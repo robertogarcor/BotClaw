@@ -21,9 +21,14 @@ class UserManager:
                 chat_id INTEGER PRIMARY KEY,
                 username TEXT,
                 voice_mode TEXT DEFAULT 'off',
+                lang TEXT DEFAULT 'en',
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
             )
         """)
+        try:
+            conn.execute("ALTER TABLE users ADD COLUMN lang TEXT DEFAULT 'en'")
+        except sqlite3.OperationalError:
+            pass
         conn.commit()
         conn.close()
 
@@ -33,7 +38,7 @@ class UserManager:
             conn = sqlite3.connect(self.db_path)
             conn.row_factory = sqlite3.Row
             cursor = conn.execute(
-                "SELECT chat_id, username, voice_mode, created_at FROM users WHERE chat_id = ?",
+                "SELECT chat_id, username, voice_mode, lang, created_at FROM users WHERE chat_id = ?",
                 (chat_id,)
             )
             row = cursor.fetchone()
@@ -43,6 +48,7 @@ class UserManager:
                     chat_id=row["chat_id"],
                     username=row["username"] or "",
                     voice_mode=row["voice_mode"] or "off",
+                    lang=row["lang"] or "en",
                     created_at=row["created_at"],
                 )
             return None
@@ -58,7 +64,7 @@ class UserManager:
         try:
             conn = sqlite3.connect(self.db_path)
             conn.execute(
-                "INSERT OR IGNORE INTO users (chat_id, username, voice_mode) VALUES (?, ?, 'off')",
+                "INSERT OR IGNORE INTO users (chat_id, username, voice_mode, lang) VALUES (?, ?, 'off', 'en')",
                 (chat_id, username)
             )
             conn.commit()
@@ -80,6 +86,21 @@ class UserManager:
             conn.commit()
         except sqlite3.Error as e:
             logger.error(f"DB error in set_voice_mode: {type(e).__name__}: {e}")
+        finally:
+            if conn:
+                conn.close()
+
+    def set_lang(self, chat_id: int, lang: str) -> None:
+        conn = None
+        try:
+            conn = sqlite3.connect(self.db_path)
+            conn.execute(
+                "UPDATE users SET lang = ? WHERE chat_id = ?",
+                (lang, chat_id)
+            )
+            conn.commit()
+        except sqlite3.Error as e:
+            logger.error(f"DB error in set_lang: {type(e).__name__}: {e}")
         finally:
             if conn:
                 conn.close()

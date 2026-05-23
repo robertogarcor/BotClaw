@@ -5,6 +5,7 @@ from telegram import Update
 from telegram.ext import ContextTypes
 
 from bot.config.settings import Settings
+from bot.i18n import _
 from bot.servers.factory import ServerFactory
 from bot.services.session_manager import SessionManager
 
@@ -13,6 +14,7 @@ logger = logging.getLogger(__name__)
 
 async def sessions_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     chat_id = update.effective_chat.id
+    lang = context.user_data.get("lang", "en")
     args = context.args
 
     session_manager = SessionManager()
@@ -23,7 +25,7 @@ async def sessions_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -
     else:
         full_path = session_manager.get_current_path(chat_id)
         if not full_path:
-            await update.message.reply_text("No project set. Use /init <path> first or specify a path: /sessions <path>")
+            await update.message.reply_text(_("sessions_no_project", lang=lang))
             return
 
     logger.info(f"Listing sessions for: {full_path}")
@@ -34,13 +36,10 @@ async def sessions_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -
         session_manager.sync_session_dates_from_api(chat_id, full_path)
 
         if not sessions:
-            await update.message.reply_text(
-                f"No sessions found for:\n{full_path}\n\n"
-                "Use /init to initialize the project."
-            )
+            await update.message.reply_text(_("sessions_none", lang=lang, path=full_path))
             return
 
-        response_text = f"📋 *Sessions for* `{full_path}`\n\n"
+        response_text = _("sessions_header", lang=lang, path=full_path)
 
         for session in sessions[:10]:
             session_id = session.get("id", "")
@@ -59,11 +58,11 @@ async def sessions_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -
             else:
                 last_access_str = "unknown"
 
-            response_text += f"• Session: `{session_id}`\n"
+            response_text += _("sessions_item", lang=lang, id=session_id)
             title_escaped = title.replace("_", r"\_").replace("*", r"\*").replace("`", r"\`").replace("[", r"\[").replace("]", r"\]").replace("(", r"\(").replace(")", r"\)")
-            response_text += f"  Title: {title_escaped or 'Untitled'}\n"
-            response_text += f"  Created: {created_str}\n"
-            response_text += f"  Last access: {last_access_str}\n"
+            response_text += _("sessions_item_title", lang=lang, title=title_escaped or 'Untitled')
+            response_text += _("sessions_item_created", lang=lang, date=created_str)
+            response_text += _("sessions_item_last_access", lang=lang, date=last_access_str)
 
         await update.message.reply_text(response_text, parse_mode="Markdown")
     except Exception as e:
@@ -73,13 +72,11 @@ async def sessions_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -
 
 async def use_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     chat_id = update.effective_chat.id
+    lang = context.user_data.get("lang", "en")
     args = context.args
 
     if not args:
-        await update.message.reply_text(
-            "Usage: /use <session_id>\n"
-            "Use /sessions to see available sessions, then copy the session ID."
-        )
+        await update.message.reply_text(_("use_usage", lang=lang))
         return
 
     session_id_prefix = args[0].strip()
@@ -103,7 +100,7 @@ async def use_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> Non
                     break
 
         if not session_details:
-            await update.message.reply_text("❌ Session not found.")
+            await update.message.reply_text(_("session_not_found", lang=lang))
             return
 
         session_id = session_details.get("id", session_id_prefix)
@@ -113,8 +110,7 @@ async def use_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> Non
 
         if directory and current_path and directory != current_path:
             await update.message.reply_text(
-                f"⚠️ This session belongs to another project.\n"
-                f"Use `/init {directory}` first.",
+                _("session_wrong_project", lang=lang, dir=directory),
                 parse_mode="Markdown"
             )
             return
@@ -125,10 +121,7 @@ async def use_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> Non
         title = session_details.get("title", "Unknown")
         title_escaped = title.replace("_", r"\_").replace("*", r"\*").replace("`", r"\`")
         await update.message.reply_text(
-            f"✅ Now using session:\n"
-            f"Session: `{session_id}`\n"
-            f"Title: {title_escaped}\n"
-            f"Path: `{directory}`",
+            _("session_selected", lang=lang, id=session_id, title=title_escaped, dir=directory),
             parse_mode="Markdown"
         )
     except Exception as e:
@@ -138,12 +131,13 @@ async def use_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> Non
 
 async def last_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     chat_id = update.effective_chat.id
+    lang = context.user_data.get("lang", "en")
     session_manager = SessionManager()
 
     try:
         user_dir = session_manager.get_current_path(chat_id)
         if not user_dir:
-            await update.message.reply_text("Use /init to set your project directory first.")
+            await update.message.reply_text(_("last_no_project", lang=lang))
             return
 
         user_dir = user_dir.rstrip("/")
@@ -151,10 +145,7 @@ async def last_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> No
         sessions = session_manager.get_sessions_from_api(user_dir)
 
         if not sessions:
-            await update.message.reply_text(
-                f"No sessions found for:\n{user_dir}\n\n"
-                "Use /new to create a new session."
-            )
+            await update.message.reply_text(_("last_no_sessions", lang=lang, path=user_dir))
             return
 
         sessions.sort(key=lambda x: x.get("time", {}).get("updated", 0), reverse=True)
@@ -167,10 +158,7 @@ async def last_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> No
         session_manager.set_session_id(chat_id, user_dir, session_id)
 
         await update.message.reply_text(
-            f"✅ Connected to latest session:\n"
-            f"Session: `{session_id}`\n"
-            f"Title: {title_escaped}\n"
-            f"Path: `{user_dir}`",
+            _("last_connected", lang=lang, id=session_id, title=title_escaped, path=user_dir),
             parse_mode="Markdown"
         )
     except Exception as e:
@@ -180,12 +168,13 @@ async def last_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> No
 
 async def new_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     chat_id = update.effective_chat.id
+    lang = context.user_data.get("lang", "en")
     session_manager = SessionManager()
 
     try:
         working_dir = session_manager.get_current_path(chat_id)
         if not working_dir:
-            await update.message.reply_text("Set your project first with /init <path>")
+            await update.message.reply_text(_("new_no_project", lang=lang))
             return
 
         server = ServerFactory.create_opencode(
@@ -197,9 +186,9 @@ async def new_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> Non
         new_session_id = session_manager.create_session_with_dir(chat_id, working_dir)
 
         if new_session_id:
-            await update.message.reply_text(f"✅ New session created:\nSession: `{new_session_id}`\nPath: `{working_dir}`", parse_mode="Markdown")
+            await update.message.reply_text(_("new_created", lang=lang, id=new_session_id, path=working_dir), parse_mode="Markdown")
         else:
-            await update.message.reply_text("❌ Failed to create new session")
+            await update.message.reply_text(_("new_failed", lang=lang))
     except Exception as e:
         logger.error(f"{type(e).__name__}: {e}")
         await update.message.reply_text(f"❌ Error: {str(e)}")
@@ -207,10 +196,11 @@ async def new_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> Non
 
 async def rename_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     chat_id = update.effective_chat.id
+    lang = context.user_data.get("lang", "en")
     args = context.args
 
     if not args:
-        await update.message.reply_text("Usage: /rename <new_title>\nExample: /rename My Project v2")
+        await update.message.reply_text(_("rename_usage", lang=lang))
         return
 
     new_title = " ".join(args)
@@ -218,12 +208,12 @@ async def rename_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> 
     session_manager = SessionManager()
     current_path = session_manager.get_current_path(chat_id)
     if not current_path:
-        await update.message.reply_text("Use /init first to set up your project.")
+        await update.message.reply_text(_("rename_no_project", lang=lang))
         return
 
     session = session_manager.get_session(chat_id, current_path)
     if not session or not session.session_id:
-        await update.message.reply_text("No active session found.")
+        await update.message.reply_text(_("rename_no_session", lang=lang))
         return
 
     try:
@@ -237,13 +227,11 @@ async def rename_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> 
         if success:
             title_escaped = new_title.replace("_", r"\_").replace("*", r"\*").replace("`", r"\`")
             await update.message.reply_text(
-                f"✅ Session renamed:\n"
-                f"Session: `{session.session_id}`\n"
-                f"Title: {title_escaped}",
+                _("rename_success", lang=lang, id=session.session_id, title=title_escaped),
                 parse_mode="Markdown"
             )
         else:
-            await update.message.reply_text("❌ Failed to rename session")
+            await update.message.reply_text(_("rename_failed", lang=lang))
     except Exception as e:
         logger.error(f"{type(e).__name__}: {e}")
         await update.message.reply_text(f"❌ Error: {str(e)}")

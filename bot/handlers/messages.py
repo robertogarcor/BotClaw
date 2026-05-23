@@ -7,6 +7,7 @@ from telegram import Update
 from telegram.ext import ContextTypes
 
 from bot.config.settings import Settings
+from bot.i18n import _
 from bot.services.user_manager import UserManager
 from bot.services.session_manager import SessionManager
 from bot.servers.factory import ServerFactory
@@ -20,6 +21,7 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE, tex
         return
 
     chat_id = update.effective_chat.id
+    lang = context.user_data.get("lang", "en")
     message_text = text if text is not None else update.message.text
 
     if not message_text:
@@ -32,16 +34,10 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE, tex
     current_path = session_manager.get_current_path(chat_id)
 
     if not current_path:
-        await update.message.reply_text(
-            "Please set your working directory first.\n\n"
-            "Use /init <path> to open an existing project\n"
-            "Example: /init /home/user/myproject\n\n"
-            "Or use /create <name|path> to create a new project\n"
-            "Example: /create my-new-project"
-        )
+        await update.message.reply_text(_("no_working_dir", lang=lang))
         return
 
-    await update.message.reply_text("⏳ Processing...")
+    await update.message.reply_text(_("processing", lang=lang))
 
     project_prefix = ""
     if current_path:
@@ -54,7 +50,7 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE, tex
     session_id = session_manager.get_or_create_session(chat_id, current_path)
 
     if not session_id:
-        await update.message.reply_text("❌ Failed to create session. Ensure OpenCode server is running.")
+        await update.message.reply_text(_("session_create_failed", lang=lang))
         return
 
     logger.info(f"Using session: {session_id}")
@@ -66,7 +62,7 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE, tex
         if response.control_request:
             await update.message.reply_text(
                 f"❓ {response.control_request.question}\n\n"
-                "Please respond with your answer."
+                + _("control_respond", lang=lang)
             )
             context.user_data["waiting_for_control_response"] = True
             return
@@ -76,7 +72,7 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE, tex
             logger.info(f"Message handler - voice_mode: {voice_mode}")
             await send_response_with_voice(update, context, response.content, voice_mode)
         else:
-            await update.message.reply_text("✅ Done (no output)")
+            await update.message.reply_text(_("done_no_output", lang=lang))
 
         session_manager.sync_session_dates_from_api(chat_id, current_path)
 
@@ -91,16 +87,17 @@ async def handle_control_response(update: Update, context: ContextTypes.DEFAULT_
 
     context.user_data["waiting_for_control_response"] = False
     chat_id = update.effective_chat.id
+    lang = context.user_data.get("lang", "en")
     response_text = update.message.text
 
     session_manager = SessionManager()
 
     session = session_manager.get_session(chat_id)
     if not session.session_id:
-        await update.message.reply_text("❌ No active session")
+        await update.message.reply_text(_("no_active_session", lang=lang))
         return
 
-    await update.message.reply_text("⏳ Processing your response...")
+    await update.message.reply_text(_("processing_response", lang=lang))
 
     try:
         response = session_manager.get_server().send_control_response(session.session_id, response_text)
@@ -108,7 +105,7 @@ async def handle_control_response(update: Update, context: ContextTypes.DEFAULT_
         if response.control_request:
             await update.message.reply_text(
                 f"❓ {response.control_request.question}\n\n"
-                "Please respond with your answer."
+                + _("control_respond", lang=lang)
             )
             context.user_data["waiting_for_control_response"] = True
             return
@@ -117,7 +114,7 @@ async def handle_control_response(update: Update, context: ContextTypes.DEFAULT_
             voice_mode = context.user_data.get("voice_mode", "off")
             await send_response_with_voice(update, context, response.content, voice_mode)
         else:
-            await update.message.reply_text("✅ Done (no output)")
+            await update.message.reply_text(_("done_no_output", lang=lang))
 
         session_manager.sync_session_dates_from_api(chat_id, session.path)
 
@@ -127,6 +124,7 @@ async def handle_control_response(update: Update, context: ContextTypes.DEFAULT_
 
 
 async def send_response_with_voice(update: Update, context: ContextTypes.DEFAULT_TYPE, text: str, voice_mode: str) -> None:
+    lang = context.user_data.get("lang", "en")
     logger.info(f"send_response_with_voice called with voice_mode: {voice_mode}")
     if voice_mode == "on":
         try:
@@ -142,7 +140,7 @@ async def send_response_with_voice(update: Update, context: ContextTypes.DEFAULT
                 await update.message.reply_voice(audio_path)
                 cleanup_temp_files(audio_path)
                 logger.info(f"Sent voice response")
-                await update.message.reply_text(f"📝 Transcript: {text[:4096]}", parse_mode="Markdown")
+                await update.message.reply_text(_("transcript", lang=lang, text=text[:4096]), parse_mode="Markdown")
                 return
 
         except Exception as e:

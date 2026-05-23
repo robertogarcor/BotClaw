@@ -17,6 +17,7 @@ class Settings:
     LOG_LEVEL = os.getenv("LOG_LEVEL", "INFO")
     TTS_VOICE = os.getenv("TTS_VOICE", "es-MX-DaliaNeural")
     PROJECTS_BASE_DIR = os.getenv("PROJECTS_BASE_DIR", str(Path.home() / "projects"))
+    DEFAULT_LANG = os.getenv("DEFAULT_LANG", "en")
 
     DATA_DIR = BASE_DIR / "data"
     DATABASE_PATH = DATA_DIR / "botclaw.db"

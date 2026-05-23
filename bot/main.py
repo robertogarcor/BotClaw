@@ -41,6 +41,7 @@ def main():
     application.add_handler(CommandHandler("create", command_project.create_command))
     application.add_handler(CommandHandler("new", command_sessions.new_command))
     application.add_handler(CommandHandler("cancel", command_base.cancel_command))
+    application.add_handler(CommandHandler("lang", command_base.lang_command))
     application.add_handler(CommandHandler("sessions", command_sessions.sessions_command))
     application.add_handler(CommandHandler("mcp", command_info.mcp_command))
     application.add_handler(CommandHandler("skills", command_info.skills_command))
