@@ -75,7 +75,7 @@ _STRINGS_ES = {
     "rename_failed": "❌ Error al renombrar sesión",
 
     # command_info.py
-    "init_first": "Usa /init para establecer tu proyecto primero.",
+    "init_first": "No hay proyecto establecido.\nUsa /projects para ver los proyectos disponibles, luego /init <ruta> para establecer uno.",
     "mcp_none": "🔌 *Servidores MCP:*\n\nNo hay servidores MCP conectados.",
     "mcp_item": "{emoji} *{name}*\n   Estado: {status}",
     "mcp_header": "🔌 *Servidores MCP:*\n\n",

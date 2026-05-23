@@ -75,7 +75,7 @@ _STRINGS_EN = {
     "rename_failed": "❌ Failed to rename session",
 
     # command_info.py
-    "init_first": "Use /init to set your project first.",
+    "init_first": "No project set.\nUse /projects to see available projects, then /init <path> to set one.",
     "mcp_none": "🔌 *MCP Servers:*\n\nNo MCP servers connected.",
     "mcp_item": "{emoji} *{name}*\n   Status: {status}",
     "mcp_header": "🔌 *MCP Servers:*\n\n",
