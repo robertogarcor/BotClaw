@@ -41,8 +41,13 @@ async def sessions_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -
 
         response_text = _("sessions_header", lang=lang, path=full_path)
 
-        for session in sessions[:10]:
+        active_session = session_manager.get_session(chat_id, full_path)
+        active_session_id = active_session.session_id if active_session else None
+
+        for i, session in enumerate(sessions[:10]):
             session_id = session.get("id", "")
+            is_active = session_id == active_session_id
+            marker = " ✅" if is_active else ""
             title = session.get("title", "")
             time_data = session.get("time", {})
             created = time_data.get("created", 0)
@@ -58,7 +63,7 @@ async def sessions_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -
             else:
                 last_access_str = "unknown"
 
-            response_text += _("sessions_item", lang=lang, id=session_id)
+            response_text += _("sessions_item", lang=lang, id=session_id, marker=marker)
             title_escaped = title.replace("_", r"\_").replace("*", r"\*").replace("`", r"\`").replace("[", r"\[").replace("]", r"\]").replace("(", r"\(").replace(")", r"\)")
             response_text += _("sessions_item_title", lang=lang, title=title_escaped or 'Untitled')
             response_text += _("sessions_item_created", lang=lang, date=created_str)

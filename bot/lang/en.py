@@ -54,7 +54,7 @@ _STRINGS_EN = {
     "sessions_no_project": "No project set. Use /init <path> first or specify a path: /sessions <path>",
     "sessions_none": "No sessions found for:\n{path}\n\nUse /init to initialize the project.",
     "sessions_header": "📋 *Sessions for* `{path}`\n\n",
-    "sessions_item": "• Session: `{id}`\n",
+    "sessions_item": "• Session: `{id}`{marker}\n",
     "sessions_item_title": "  Title: {title}\n",
     "sessions_item_created": "  Created: {date}\n",
     "sessions_item_last_access": "  Last access: {date}\n",
