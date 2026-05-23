@@ -330,4 +330,4 @@ async def mode_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> No
     new_mode = "plan" if current_mode == "build" else "build"
     context.user_data["agent_mode"] = new_mode
 
-    await update.message.reply_text(f"🔁 Modo cambiado a: *{new_mode}*", parse_mode="Markdown")
+    await update.message.reply_text(f"🔁 Mode changed to: *{new_mode}*", parse_mode="Markdown")

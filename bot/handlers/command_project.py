@@ -221,13 +221,13 @@ async def init_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> No
     updated_str = datetime.fromtimestamp(updated_ts / 1000).strftime("%d-%m-%Y %H:%M") if updated_ts else None
 
     project_name = Path(full_path).name
-    msg = f"✅ *{project_name}* configurado\n\n"
+    msg = f"✅ *{project_name}* configured\n\n"
     msg += f"Path: `{full_path}`\n"
     msg += f"Session: `{session_id}`\n"
     if is_new:
-        msg += "🆕 Nueva sesión creada\n"
+        msg += "🆕 New session created\n"
     else:
-        msg += "🔄 Sesión existente reutilizada\n"
+        msg += "🔄 Existing session reused\n"
     if title:
         title_escaped = title.replace("_", r"\_").replace("*", r"\*").replace("`", r"\`")
         msg += f"Title: {title_escaped}\n"
@@ -235,7 +235,7 @@ async def init_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> No
         msg += f"Created: {created_str}\n"
     if updated_str:
         msg += f"Last access: {updated_str}\n"
-    msg += f"\n*Listo para recibir mensajes.*"
+    msg += f"\n*Ready for messages.*"
     try:
         await update.message.reply_text(msg, parse_mode="Markdown")
     except Exception as e:
@@ -300,8 +300,8 @@ async def clone_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> N
         f"✅ *{repo_name}* cloned and configured\n\n"
         f"Path: `{target_dir}`\n"
         f"Session: `{session_id}`\n"
-        f"🆕 Nueva sesión creada\n\n"
-        f"*Listo para recibir mensajes.*"
+        f"🆕 New session created\n\n"
+        f"*Ready for messages.*"
     )
     try:
         await update.message.reply_text(msg, parse_mode="Markdown")
@@ -342,8 +342,8 @@ async def create_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> 
         f"✅ *{project_name}* created and configured\n\n"
         f"Path: `{full_path}`\n"
         f"Session: `{session_id}`\n"
-        f"🆕 Nueva sesión creada\n\n"
-        f"*Listo para recibir mensajes.*"
+        f"🆕 New session created\n\n"
+        f"*Ready for messages.*"
     )
     try:
         await update.message.reply_text(msg, parse_mode="Markdown")

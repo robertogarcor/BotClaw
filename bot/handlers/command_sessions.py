@@ -113,8 +113,8 @@ async def use_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> Non
 
         if directory and current_path and directory != current_path:
             await update.message.reply_text(
-                f"⚠️ Esta sesión pertenece a otro proyecto.\n"
-                f"Usa `/init {directory}` primero.",
+                f"⚠️ This session belongs to another project.\n"
+                f"Use `/init {directory}` first.",
                 parse_mode="Markdown"
             )
             return
