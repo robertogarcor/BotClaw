@@ -1,6 +1,8 @@
 # Changelog
 
 ## [2026-05-23]
+- i18n: unify all bot messages to English (c9e3ff8)
+- docs: update HISTORY and CHANGELOG for /projects multi-session and /use validation (bba352d)
 - fix: /use warns if session belongs to different project (9f4145a)
 - refactor: /projects now shows all sessions per project with markers (0ff1a23)
 ## [2026-05-22]

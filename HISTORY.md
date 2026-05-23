@@ -27,8 +27,9 @@
 - [x] Mostrar skills en /project
 - [x] /skills comando para listar skills del proyecto
 
-### Documentación
+### Documentación / i18n
 - [x] README.md, SPEC.md, AGENTS.md, HISTORY.md, CHANGELOG.md
+- [x] Mensajes del bot unificados a inglés (100%)
 
 ---
 
@@ -433,9 +434,17 @@ En vez de solo la más reciente, ahora `/projects` lista todas las sesiones de c
 ---
 
 ### 57. /use rechaza sesiones de otro proyecto
-Cuando se intenta `/use` con una sesión que no pertenece al proyecto activo, muestra advertencia y sugiere `/init` primero. Mensaje en español.
+Cuando se intenta `/use` con una sesión que no pertenece al proyecto activo, muestra advertencia y sugiere `/init` primero.
 
 **Archivos:** bot/handlers/command_sessions.py, tests/test_use_command.py
+**Estado:** ✅ Completado (2026-05-23)
+
+---
+
+### 58. Unificar idioma del bot a inglés
+Se unificaron todos los mensajes del bot a inglés. Cambios en `/init`, `/clone`, `/create`, `/use`, `/mode` y label de transcripción de voz. 6 strings editados en 4 archivos.
+
+**Archivos:** bot/handlers/command_project.py, command_sessions.py, command_info.py, messages.py
 **Estado:** ✅ Completado (2026-05-23)
 
 ## Notas Técnicas
