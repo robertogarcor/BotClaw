@@ -109,6 +109,16 @@ async def use_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> Non
         session_id = session_details.get("id", session_id_prefix)
         directory = session_details.get("directory", "")
         session_manager = SessionManager()
+        current_path = session_manager.get_current_path(chat_id)
+
+        if directory and current_path and directory != current_path:
+            await update.message.reply_text(
+                f"⚠️ Esta sesión pertenece a otro proyecto.\n"
+                f"Usa `/init {directory}` primero.",
+                parse_mode="Markdown"
+            )
+            return
+
         if directory:
             session_manager.set_session_id(chat_id, directory, session_id)
 
