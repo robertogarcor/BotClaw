@@ -462,17 +462,13 @@ Implementación completa de internacionalización con soporte inglés/español:
 **Archivos:** bot/i18n.py, bot/config/settings.py, bot/models/user.py, bot/services/user_manager.py, bot/handlers/command_base.py, command_info.py, command_project.py, command_sessions.py, command_voice.py, messages.py, voice.py, callbacks.py, bot/main.py
 **Estado:** ✅ Completado (2026-05-23)
 
+### 60. Marcador ✅ en /sessions
+Se añadió marcador ✅ para la sesión activa en `/sessions`, siguiendo la misma lógica de `/projects`.
+
+**Archivos:** bot/handlers/command_sessions.py, bot/lang/en.py, bot/lang/es.py
+**Estado:** ✅ Completado (2026-05-23, commit 1318e41)
+
 ## Tareas Pendientes
-
-### 60. Marcadores en /sessions (✅/➡️)
-Aplicar la misma lógica de `/projects` a `/sessions`: mostrar ✅ para la sesión activa y ➡️ para la más reciente.
-
-**Archivos:** bot/handlers/command_sessions.py, bot/i18n.py
-
-### 61. Filtrar sesiones no creadas por el bot
-Agregar columna `created_by_bot` en la DB local de sesiones, marcar al crear sesión desde el bot, y filtrar en `/sessions` contra la API para ocultar sesiones creadas por subagentes de OpenCode.
-
-**Archivos:** bot/services/session_manager.py, bot/handlers/command_sessions.py
 
 ---
 
