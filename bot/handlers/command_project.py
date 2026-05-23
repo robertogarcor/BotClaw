@@ -73,43 +73,63 @@ async def projects_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -
             return
 
         projects_data = projects.json()
-        projects_data = [p for p in projects_data if p.get("id") != "global"]
         projects_data = [p for p in projects_data if is_under_base_dir(p.get("worktree", ""))]
 
         sessions = server._session.get(
             f"{server.url}/session",
             timeout=30
         )
+        all_sessions = sessions.json() if sessions.status_code == 200 else []
 
-        global_projects = {}
-        if sessions.status_code == 200:
-            for s in sessions.json():
-                if s.get("projectID") == "global" and s.get("directory"):
-                    dir_path = s["directory"]
-                    if not is_under_base_dir(dir_path):
-                        continue
-                    if str(Path(dir_path).expanduser().resolve()) == str(base_dir):
-                        continue
-                    if dir_path not in global_projects:
-                        global_projects[dir_path] = s
-
-        registered_paths = {p.get("worktree") for p in projects_data}
-        global_projects = {k: v for k, v in global_projects.items() if k not in registered_paths}
+        worktree_to_project = {p.get("worktree"): p for p in projects_data}
+        seen_paths = set()
 
         all_projects = []
+
         for project in projects_data:
+            path = project.get("worktree", "")
+            if not path or path in seen_paths:
+                continue
+            seen_paths.add(path)
+
+            matching_sessions = [
+                s for s in all_sessions
+                if s.get("directory") == path
+            ]
+            matching_sessions.sort(key=lambda s: s.get("time", {}).get("updated", 0), reverse=True)
+
+            time_data = project.get("time", {})
+            if matching_sessions:
+                best_time = matching_sessions[0].get("time", {})
+                if best_time.get("updated", 0) > time_data.get("updated", 0):
+                    time_data = best_time
+
             all_projects.append({
-                "path": project.get("worktree", ""),
-                "time": project.get("time", {}),
-                "session_id": None,
+                "path": path,
+                "time": time_data,
+                "sessions": matching_sessions,
             })
 
-        for dir_path, session in global_projects.items():
-            time_data = session.get("time", {})
+        orphan_sessions = [
+            s for s in all_sessions
+            if s.get("projectID") == "global"
+            and s.get("directory")
+            and s["directory"] not in worktree_to_project
+            and is_under_base_dir(s["directory"])
+            and Path(s["directory"]).expanduser().resolve() != base_dir
+            and Path(s["directory"]).exists()
+        ]
+
+        for s in orphan_sessions:
+            dir_path = s["directory"]
+            if dir_path in seen_paths:
+                continue
+            seen_paths.add(dir_path)
+            time_data = s.get("time", {})
             all_projects.append({
                 "path": dir_path,
                 "time": {"created": time_data.get("created", 0), "updated": time_data.get("updated", 0)},
-                "session_id": session.get("id", "None"),
+                "sessions": [s],
             })
 
         if not all_projects:
@@ -121,35 +141,42 @@ async def projects_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -
             )
             return
 
+        current_path = session_manager.get_current_path(chat_id)
+        active_session = session_manager.get_session(chat_id, current_path) if current_path else None
+        active_session_id = active_session.session_id if active_session else None
+
         response = "📂 *Projects:*\n\n"
         for project in all_projects:
             project_path = project["path"]
-            time_data = project["time"]
-            created_ts = time_data.get("created", 0)
-            updated_ts = time_data.get("updated", 0)
-
-            if created_ts:
-                created_str = datetime.fromtimestamp(created_ts / 1000).strftime("%d-%m-%Y %H:%M")
-            else:
-                created_str = "unknown"
-
-            if updated_ts:
-                last_access_str = datetime.fromtimestamp(updated_ts / 1000).strftime("%d-%m-%Y %H:%M")
-            else:
-                last_access_str = "unknown"
-
-            session_id = project["session_id"]
-            if not session_id:
-                sessions_list = session_manager.get_sessions_from_api(project_path)
-                session_id = sessions_list[0].get("id", "None") if sessions_list else "None"
-
             project_name = Path(project_path).name if project_path else "unknown"
+
+            sessions_data = project.get("sessions", [])
+            if not sessions_data:
+                sessions_data = session_manager.get_sessions_from_api(project_path)
+                sessions_data.sort(key=lambda s: s.get("time", {}).get("updated", 0), reverse=True)
 
             response += f"• *{project_name}*\n"
             response += f"  Path: `{project_path}`\n"
-            response += f"  Session: `{session_id}`\n"
-            response += f"  Created: {created_str}\n"
-            response += f"  Last access: {last_access_str}\n\n"
+
+            if not sessions_data:
+                response += f"  Session: None\n"
+            else:
+                for i, s in enumerate(sessions_data):
+                    sid = s.get("id", "None")
+                    s_time = s.get("time", {})
+                    s_updated = s_time.get("updated", 0)
+                    s_updated_str = datetime.fromtimestamp(s_updated / 1000).strftime("%d-%m-%Y %H:%M") if s_updated else "unknown"
+                    s_created = s_time.get("created", 0)
+                    s_created_str = datetime.fromtimestamp(s_created / 1000).strftime("%d-%m-%Y %H:%M") if s_created else "unknown"
+
+                    is_active_for_user = sid == active_session_id
+                    is_most_recent = i == 0
+                    marker = " ✅" if is_active_for_user else (" ➡️" if is_most_recent else "")
+                    response += f"  _Session:_ `{sid}`{marker}\n"
+                    response += f"  Created: {s_created_str}\n"
+                    response += f"  Last access: {s_updated_str}\n"
+
+            response += "\n"
 
         await update.message.reply_text(response[:4096], parse_mode="Markdown")
     except Exception as e:

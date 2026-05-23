@@ -81,6 +81,7 @@ class TestSessionManager:
         assert session_manager.get_current_path(123) == "/path/b"
 
     def test_get_current_path_returns_active(self, session_manager):
+        session_manager.clear_session(999)
         assert session_manager.get_current_path(999) is None
         session_manager.save_session(999, "/active/path", "ses_active")
         session_manager.set_active_path(999, "/active/path")

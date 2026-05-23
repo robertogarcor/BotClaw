@@ -257,9 +257,9 @@ Crear comando /rename <nuevo_titulo> usando PATCH /session/{session_id}.
 ---
 
 ### 31. Investigar por qué /create no registra proyecto en la tabla project de OpenCode
-OpenCode solo registra proyectos cuando se abren desde la TUI. La API no tiene endpoint para crear proyectos. Solución implementada: /projects combina proyectos registrados + sesiones globales. /create ahora genera estructura completa (git init + templates + sesión).
-**Archivos:** bot/handlers/command_project.py, bot/handlers/command_info.py
-**Estado:** ✅ Resuelto (2026-05-19) — limitación de OpenCode confirmada
+OpenCode SÍ registra proyectos creados via `/create` en la tabla `project`, pero con `id=global` (no un UUID único). El código anterior filtrábamos `id != "global"` ocultándolos. Solución: eliminar ese filtro y asociar sesiones por `directory == worktree`.
+**Archivos:** bot/handlers/command_project.py - projects_command()
+**Estado:** ✅ Corregido (2026-05-22) — falso negativo corregido
 
 ---
 
@@ -409,6 +409,16 @@ Cuando no hay proyectos en el directorio base, el mensaje ahora muestra el `PROJ
 **Estado:** ✅ Completado (2026-05-22)
 
 ---
+
+### 55. Refactorizar /projects: flujo correcto project → session
+Se corrigió `projects_command()` para:
+1. No filtrar proyectos con `id=global` (los creados via `/create` lo usan)
+2. Asociar sesiones a proyectos mediante `directory == worktree`
+3. Usar `GET /session` completo y matchear por directorio en vez del fallback global
+4. Orphan sessions solo si el directorio existe en disco
+
+**Archivos:** bot/handlers/command_project.py - projects_command()
+**Estado:** ✅ Completado (2026-05-22)
 
 ## Notas Técnicas
 
