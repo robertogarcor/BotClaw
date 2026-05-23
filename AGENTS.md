@@ -40,8 +40,13 @@ Cuando el usuario envía un mensaje, el bot le añade el prefijo `[INFO] Proyect
 ## Gestión de Tareas
 
 - **HISTORY.md**: Documentar tareas realizadas y pendientes
-- **Validar funcionalidad**: Cada tarea debe probarse antes de marcar como completada
-- **Commit**: Solo hacer commit cuando la tarea esté validada y funcione correctamente
+- **Flujo por tarea**:
+  1. Documentar tarea en HISTORY.md como pendiente (🔲)
+  2. Implementar la tarea o funcionalidad
+  3. Realizar test asociado si aplica
+  4. Probar la funcionalidad de la tarea
+  5. Commit si todo correcto
+  6. Cerrar tarea en HISTORY.md como completada (✅ + fecha)
 - **Skills**: Usar las skills disponibles siguiendo sus convenciones (ver `.agents/skills/`)
 - **Documentación**: Mantener actualizados SPEC.md, HISTORY.md y README.md según avances del proyecto
 - **Memoria**: Documentar cada avance con mem_save
