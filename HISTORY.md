@@ -5,6 +5,8 @@
 ### Bot Core
 - [x] Registro de usuarios con SQLite (tabla users)
 - [x] Gestión de sesiones (crear, usar, listar, nueva)
+- [x] Validación: `/use` rechaza sesiones de otro proyecto
+- [x] `/projects` muestra todas las sesiones con marcadores (✅ activa, ➡️ current)
 - [x] Comandos implementados: `/start`, `/help`, `/init`, `/project`, `/projects`, `/create`, `/clone`, `/new`, `/sessions`, `/use`, `/last`, `/status`, `/mode`, `/mcp`, `/skills`, `/rename`, `/voice`, `/cancel`
 
 ### Integración OpenCode
@@ -419,6 +421,22 @@ Se corrigió `projects_command()` para:
 
 **Archivos:** bot/handlers/command_project.py - projects_command()
 **Estado:** ✅ Completado (2026-05-22)
+
+---
+
+### 56. /projects muestra todas las sesiones por proyecto
+En vez de solo la más reciente, ahora `/projects` lista todas las sesiones de cada proyecto. La más reciente se marca con `➡️` y si es el proyecto activo se marca con `✅`. Label en cursiva `_Session:_`.
+
+**Archivos:** bot/handlers/command_project.py, tests/test_projects_command.py
+**Estado:** ✅ Completado (2026-05-23)
+
+---
+
+### 57. /use rechaza sesiones de otro proyecto
+Cuando se intenta `/use` con una sesión que no pertenece al proyecto activo, muestra advertencia y sugiere `/init` primero. Mensaje en español.
+
+**Archivos:** bot/handlers/command_sessions.py, tests/test_use_command.py
+**Estado:** ✅ Completado (2026-05-23)
 
 ## Notas Técnicas
 

@@ -1,6 +1,11 @@
 # Changelog
 
+## [2026-05-23]
+- fix: /use warns if session belongs to different project (9f4145a)
+- refactor: /projects now shows all sessions per project with markers (0ff1a23)
 ## [2026-05-22]
+- docs: unify README command sections with /help (a132f46)
+- docs: update CHANGELOG, HISTORY and add tests (9cb1f96)
 - chore: add LICENSE file (12f8de0)
 - fix: exclude base dir from /projects list (49038bf)
 - fix: improve /projects empty message (5d6a13c)
