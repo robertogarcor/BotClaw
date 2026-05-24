@@ -1,5 +1,8 @@
 # Changelog
 
+## [2026-05-24]
+- feat: show current language in /status (e429451)
+
 ## [2026-05-23]
 - feat: update init msg to suggest /projects first (5c6e594)
 - feat: add active session marker to /sessions (1318e41)

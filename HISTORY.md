@@ -483,10 +483,10 @@ Filtro OUT por regex, sin tabla DB ni tracking.
 **Estado:** 🔲 Pendiente
 
 ### 63. Mostrar idioma actual en /status
-Añadir línea "🌐 Language: EN" / "🌐 Idioma: ES" al final del output de `/status`.
+Añadir línea "Language: 🌐 {lang_code}" al final del output de `/status`, alineado con el formato de los demás elementos (icono tras label).
 
 **Archivos:** bot/handlers/command_info.py, bot/lang/en.py, bot/lang/es.py — clave "status_lang"
-**Estado:** 🔲 Pendiente
+**Estado:** ✅ Completado (2026-05-24)
 
 ---
 
