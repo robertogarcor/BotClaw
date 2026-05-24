@@ -1,5 +1,6 @@
 import subprocess
 import logging
+import re
 from datetime import datetime
 from pathlib import Path
 from telegram import Update
@@ -155,6 +156,8 @@ async def projects_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -
             if not sessions_data:
                 sessions_data = session_manager.get_sessions_from_api(project_path)
                 sessions_data.sort(key=lambda s: s.get("time", {}).get("updated", 0), reverse=True)
+
+            sessions_data = [s for s in sessions_data if not re.search(r'\(@[\w-]+ subagent\)', s.get("title", ""))]
 
             response += _("projects_item_name", lang=lang, name=project_name)
             response += _("projects_item_path", lang=lang, path=project_path)

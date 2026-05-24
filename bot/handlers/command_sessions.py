@@ -1,4 +1,5 @@
 import logging
+import re
 from datetime import datetime
 from pathlib import Path
 from telegram import Update
@@ -32,6 +33,7 @@ async def sessions_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -
 
     try:
         sessions = session_manager.get_sessions_from_api(full_path)
+        sessions = [s for s in sessions if not re.search(r'\(@[\w-]+ subagent\)', s.get("title", ""))]
 
         session_manager.sync_session_dates_from_api(chat_id, full_path)
 
