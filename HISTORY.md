@@ -500,6 +500,19 @@ Actualizar `sessions_none` y `sessions_no_project` para sugerir `/projects` ante
 **Archivos:** bot/lang/en.py, bot/lang/es.py — claves "sessions_none", "sessions_no_project"
 **Estado:** ✅ Completado (2026-05-24)
 
+### 66. Verificar proyecto en OpenCode antes de listar sesiones
+Al hacer `/sessions`, comprobar que el proyecto actual existe en `GET /project` de OpenCode.
+Si no existe, mostrar:
+
+Project not found in OpenCode or Dir path base.
+No sessions found for project:
+{path}
+
+Use /projects to see available projects, then /init <path> to set one.
+
+**Archivos:** bot/handlers/command_sessions.py — sessions_command()
+**Estado:** ✅ Completado (2026-05-24)
+
 ## Notas Técnicas
 
 - Puerto de OpenCode: **4097** (no 4096)

@@ -52,7 +52,7 @@ _STRINGS_EN = {
 
     # command_sessions.py
     "sessions_no_project": "No project set. Use /projects to see available projects, then /init <path> to set one.",
-    "sessions_none": "No sessions found for:\n{path}\n\nUse /projects to see available projects, then /init <path> to set one.",
+    "sessions_none": "Project not found in OpenCode or Dir path base.\nNo sessions found for project:\n{path}\n\nUse /projects to see available projects, then /init <path> to set one.",
     "sessions_header": "📋 *Sessions for* `{path}`\n\n",
     "sessions_item": "• Session: `{id}`{marker}\n",
     "sessions_item_title": "  Title: {title}\n",

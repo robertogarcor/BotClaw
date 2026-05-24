@@ -32,6 +32,21 @@ async def sessions_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -
     logger.info(f"Listing sessions for: {full_path}")
 
     try:
+        server = ServerFactory.create_opencode(
+            url=Settings.OPENCODE_SERVER_URL,
+            password=Settings.OPENCODE_SERVER_PASSWORD
+        )
+        resp = server._session.get(f"{server.url}/project", timeout=30)
+        if resp.status_code == 200:
+            projects = resp.json()
+            project_exists = any(
+                p.get("worktree", "").rstrip("/") == full_path.rstrip("/")
+                for p in projects
+            )
+            if not project_exists:
+                await update.message.reply_text(_("sessions_none", lang=lang, path=full_path))
+                return
+
         sessions = session_manager.get_sessions_from_api(full_path)
         sessions = [s for s in sessions if not re.search(r'\(@[\w-]+ subagent\)', s.get("title", ""))]
 

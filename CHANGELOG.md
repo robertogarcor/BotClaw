@@ -1,6 +1,7 @@
 # Changelog
 
 ## [2026-05-24]
+- feat: verify project exists in OpenCode before listing sessions
 - feat: update sessions messages to suggest /projects first
 - feat: filter subagent sessions in /sessions and /projects (b04bc36)
 - feat: copy .agents/skills on /create (cedef9b)
