@@ -1,6 +1,7 @@
 # Changelog
 
 ## [2026-05-24]
+- feat: filter subagent sessions in /sessions and /projects (b04bc36)
 - feat: copy .agents/skills on /create (cedef9b)
 - feat: show current language in /status (e429451)
 

@@ -475,12 +475,12 @@ Actualmente `/status` muestra "Use /init to set your project first." Se cambia a
 **Archivos:** bot/lang/en.py, bot/lang/es.py — clave "init_first"
 **Estado:** ✅ Completado (2026-05-23)
 
-### 61. Filtrar sesiones de subagentes en /sessions
-Ocultar sesiones con "@xxx subagent" en el título (ej: @explore subagent).
+### 61. Filtrar sesiones de subagentes en /sessions y /projects
+Ocultar sesiones con "(@xxx subagent)" en el título (ej: @explore subagent).
 Filtro OUT por regex, sin tabla DB ni tracking.
 
-**Archivos:** bot/handlers/command_sessions.py
-**Estado:** 🔲 Pendiente
+**Archivos:** bot/handlers/command_sessions.py, bot/handlers/command_project.py
+**Estado:** ✅ Completado (2026-05-24, commit b04bc36)
 
 ### 63. Mostrar idioma actual en /status
 Añadir línea "Language: 🌐 {lang_code}" al final del output de `/status`, alineado con el formato de los demás elementos (icono tras label).
