@@ -466,14 +466,14 @@ Implementación completa de internacionalización con soporte inglés/español:
 Se añadió marcador ✅ para la sesión activa en `/sessions`, siguiendo la misma lógica de `/projects`.
 
 **Archivos:** bot/handlers/command_sessions.py, bot/lang/en.py, bot/lang/es.py
-**Estado:** ✅ Completado (2026-05-23)
+**Estado:** ✅ Completado (2026-05-23, commit 1318e41)
 
 ### 62. Mensaje "sin proyecto" sugiere /projects primero
 Actualmente `/status` muestra "Use /init to set your project first." Se cambia a
 "No project set.\nUse /projects to see available projects, then /init <path> to set one."
 
 **Archivos:** bot/lang/en.py, bot/lang/es.py — clave "init_first"
-**Estado:** ✅ Completado (2026-05-23)
+**Estado:** ✅ Completado (2026-05-23, commit 5c6e594)
 
 ### 61. Filtrar sesiones de subagentes en /sessions y /projects
 Ocultar sesiones con "(@xxx subagent)" en el título (ej: @explore subagent).
@@ -486,7 +486,7 @@ Filtro OUT por regex, sin tabla DB ni tracking.
 Añadir línea "Language: 🌐 {lang_code}" al final del output de `/status`, alineado con el formato de los demás elementos (icono tras label).
 
 **Archivos:** bot/handlers/command_info.py, bot/lang/en.py, bot/lang/es.py — clave "status_lang"
-**Estado:** ✅ Completado (2026-05-24)
+**Estado:** ✅ Completado (2026-05-24, commit e429451)
 
 ### 64. /create copia .agents/skills al nuevo proyecto
 Al hacer `/create`, copiar todo `.agents/` (skills) desde BotClaw al nuevo proyecto.
@@ -498,7 +498,7 @@ Al hacer `/create`, copiar todo `.agents/` (skills) desde BotClaw al nuevo proye
 Actualizar `sessions_none` y `sessions_no_project` para sugerir `/projects` antes de `/init`, igual que se hizo con `init_first` en la #62.
 
 **Archivos:** bot/lang/en.py, bot/lang/es.py — claves "sessions_none", "sessions_no_project"
-**Estado:** ✅ Completado (2026-05-24)
+**Estado:** ✅ Completado (2026-05-24, commit 522e5f7)
 
 ### 66. Verificar proyecto en OpenCode antes de listar sesiones
 Al hacer `/sessions`, comprobar que el proyecto actual existe en `GET /project` de OpenCode.
@@ -511,7 +511,7 @@ No sessions found for project:
 Use /projects to see available projects, then /init <path> to set one.
 
 **Archivos:** bot/handlers/command_sessions.py — sessions_command()
-**Estado:** ✅ Completado (2026-05-24)
+**Estado:** ✅ Completado (2026-05-24, commit 93cb4a3)
 
 ## Notas Técnicas
 
