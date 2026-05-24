@@ -1,6 +1,7 @@
 # Changelog
 
 ## [2026-05-24]
+- feat: copy .agents/skills on /create (cedef9b)
 - feat: show current language in /status (e429451)
 
 ## [2026-05-23]

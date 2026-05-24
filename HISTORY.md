@@ -488,6 +488,12 @@ Añadir línea "Language: 🌐 {lang_code}" al final del output de `/status`, al
 **Archivos:** bot/handlers/command_info.py, bot/lang/en.py, bot/lang/es.py — clave "status_lang"
 **Estado:** ✅ Completado (2026-05-24)
 
+### 64. /create copia .agents/skills al nuevo proyecto
+Al hacer `/create`, copiar todo `.agents/` (skills) desde BotClaw al nuevo proyecto.
+
+**Archivos:** bot/services/session_manager.py — create_project()
+**Estado:** ✅ Completado (2026-05-24, commit cedef9b)
+
 ---
 
 ## Notas Técnicas
