@@ -45,9 +45,9 @@ Cuando el usuario envía un mensaje, el bot le añade el prefijo `[INFO] Proyect
   2. Implementar la tarea o funcionalidad
   3. Realizar test asociado si aplica
   4. Probar la funcionalidad de la tarea
-  5. Commit si todo correcto
-  6. Cerrar tarea en HISTORY.md como completada (✅ + fecha + commit)
-  7. Actualizar CHANGELOG.md de la tarea completa
+  5. Cerrar tarea en HISTORY.md como completada (✅ + fecha + commit)
+  6. Actualizar CHANGELOG.md de la tarea completa
+  7. Commit de todo (código + HISTORY + CHANGELOG)
 - **Skills**: Usar las skills disponibles siguiendo sus convenciones (ver `.agents/skills/`)
 - **Documentación**: Mantener actualizados SPEC.md, HISTORY.md, CHANGELOG.md y README.md según avances del proyecto
 - **Memoria**: Documentar cada avance con mem_save

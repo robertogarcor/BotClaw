@@ -51,8 +51,8 @@ _STRINGS_ES = {
     "ready": "\n*Listo para recibir mensajes.*",
 
     # command_sessions.py
-    "sessions_no_project": "No hay proyecto activo. Usa /init <ruta> primero o especifica una ruta: /sessions <ruta>",
-    "sessions_none": "No se encontraron sesiones para:\n{path}\n\nUsa /init para inicializar el proyecto.",
+    "sessions_no_project": "No hay proyecto activo. Usa /projects para ver los proyectos disponibles, luego /init <ruta> para establecer uno.",
+    "sessions_none": "No se encontraron sesiones para:\n{path}\n\nUsa /projects para ver los proyectos disponibles, luego /init <ruta> para establecer uno.",
     "sessions_header": "📋 *Sesiones de* `{path}`\n\n",
     "sessions_item": "• Sesión: `{id}`{marker}\n",
     "sessions_item_title": "  Título: {title}\n",

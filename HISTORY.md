@@ -494,7 +494,11 @@ Al hacer `/create`, copiar todo `.agents/` (skills) desde BotClaw al nuevo proye
 **Archivos:** bot/services/session_manager.py — create_project()
 **Estado:** ✅ Completado (2026-05-24, commit cedef9b)
 
----
+### 65. Mensajes de /sessions sugieren /projects primero
+Actualizar `sessions_none` y `sessions_no_project` para sugerir `/projects` antes de `/init`, igual que se hizo con `init_first` en la #62.
+
+**Archivos:** bot/lang/en.py, bot/lang/es.py — claves "sessions_none", "sessions_no_project"
+**Estado:** ✅ Completado (2026-05-24)
 
 ## Notas Técnicas
 
