@@ -105,7 +105,8 @@ _STRINGS_EN = {
     "status_git_ok": "Git: ✅\n",
     "status_git_fail": "Git: ❌\n",
     "status_git_not_installed": "Git: ❌ (not installed)\n",
-    "status_voice": "Voice: {emoji} {mode}",
+    "status_voice": "Voice: {emoji} {mode}\n",
+    "status_lang": "Language: 🌐 {lang_code}",
 
     # command_voice.py
     "voice_on": "🎤 Voice mode: ON\nAll replies will be sent as voice.",

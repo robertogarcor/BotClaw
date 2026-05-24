@@ -213,6 +213,7 @@ async def status_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> 
         status_text += _("status_git_fail", lang=lang)
 
     status_text += _("status_voice", lang=lang, emoji=voice_emoji, mode=voice_mode.upper())
+    status_text += _("status_lang", lang=lang, lang_code=lang.upper())
 
     await update.message.reply_text(status_text, parse_mode="Markdown")
 
