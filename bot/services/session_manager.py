@@ -1,4 +1,5 @@
 import logging
+import shutil
 import sqlite3
 from pathlib import Path
 from typing import Optional, List
@@ -412,5 +413,11 @@ This project uses the following context files:
 ## {today} - Project initialization
 * [Added]: Project setup with base structure
 """)
+
+        agents_src = Path(__file__).resolve().parent.parent.parent / ".agents"
+        agents_dst = Path(path) / ".agents"
+        if agents_src.exists():
+            shutil.copytree(agents_src, agents_dst, dirs_exist_ok=True)
+            logger.info(f"Copied .agents to {agents_dst}")
 
         return self.init_project(chat_id, path)
